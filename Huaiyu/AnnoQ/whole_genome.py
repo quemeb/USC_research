@@ -31,8 +31,8 @@ def counter(arrays):
 
 """ File Input & Data Mining """
 # Reading file
-filename = r"C:\Users\bryan\OneDrive - University of Southern California\Research\Mi_lab\AnnoQ\Code\Test_data\Test_data.txt"
-cdata = pd.read_csv(filename, delimiter="\t", dtype= object)
+url = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
+cdata = pd.read_csv(url, delimiter="\t", dtype= object, compression='gzip')
 
 # Selecting data
 AN_ID_1 = cdata["ANNOVAR_ensembl_Gene_ID"]  #Gene ID should be here
