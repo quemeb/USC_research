@@ -37,31 +37,19 @@ cdata = pd.read_csv(url, delimiter="\t", dtype= object, compression='gzip')
 # Selecting data
 AN_ID_1 = cdata["ANNOVAR_ensembl_Gene_ID"]  #Gene ID should be here
 AN_ID_intergenic = cdata["ANNOVAR_ensembl_Closest_gene(intergenic_only)"]    #alternative place for Gene ID
+AN_ID_tog = [AN_ID_intergenic[i] if gene_id == "." else gene_id for i, gene_id in enumerate(AN_ID_1)]
 
 SN_ID_1 = cdata["SnpEff_ensembl_Gene_ID"]   #Gene ID for SnpEff
+SN_ID_intergenic = [SN_ID_1[i] if gene_id == '.' else '.' for i, gene_id in enumerate(AN_ID_1)]
 
 VP_ID_1 = cdata["VEP_ensembl_Gene_ID"]      #Gene ID for VEP
+VP_ID_intergenic = [VP_ID_1[i] if gene_id == "." else "." for i, gene_id in enumerate(AN_ID_1)]
 
 chrs = cdata["chr"] # chromosome number
 pos = cdata["pos"] # SNP position
 ref = cdata["ref"] # reference
 alt = cdata["alt"] # mutation
 rs = cdata["rs_dbSNP151"] # rs ID
-
-# Gene ID Extraction & Concatination
-AN_ID_tog = [AN_ID_intergenic[i] if gene_id == "." else gene_id for i, gene_id in enumerate(AN_ID_1)]
-
-SN_ID_intergenic = [SN_ID_1[i] if gene_id == '.' else '.' for i, gene_id in enumerate(AN_ID_1)]
-
-VP_ID_intergenic = 
-
-SN_ID_intergenic = []
-for i in range(0,size):
-    if(AN_ID_1[i] == "."):
-        SN_ID_intergenic.append(SN_ID_1[i])
-    else:
-        SN_ID_intergenic.append(".")
-
 
 # Extracting Gene ID in ANNOVAR
 AN_ID = extract(AN_ID_tog)
