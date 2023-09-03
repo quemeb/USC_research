@@ -38,9 +38,11 @@ drop heightincm weightinkg ver surveyversion n respondentid // variables provide
 drop a187 a188 a189 a190 a191 a174 a175 a176 // investigators not interested in these vars
 drop a180 // information already captured by a179
 
-*------------------ Generating RESILIENCE score from scratch 
+*------------------ RESILIENCE  
+
 gen res = (a156 + a157 + a158 + a159 + a160 + a161)/6
 codebook res 
+drop if missing(res)
 *ttest res == resilience, unpaired // comparing to V's score
 *hist res, frequency normal title("Distribution of Resilience Score")
 // we will use our score because they are different 
@@ -54,7 +56,7 @@ label variable res_cat "Resilience Categories"
 label define res_catf 0 "Low Resilience(1.00-2.99)" 1 "Normal Resilience(3.00-4.30)" 2 "High Resilience(4.31-5.00)" 
 label values res_cat res_catf 
 *tab res_cat r3, chi2 exact // comparing to V's - was different 
-drop r3 
+drop r3 res
 
 *------------------ COVID_EFFECT 
 
@@ -88,15 +90,13 @@ hist cov_wellbeing, frequency normal title ("dist of cov_wellbeing")
 hist wellbeing, frequency normal title("Distribution of wellbeing")
 signrank cov_wellbeing=wellbeing 
 *make categories
-drop if missing(res) 
-gen well_cat=0 if cov_wellbeing<17.5
-replace well_cat=1 if cov_wellbeing>=17.5 
+gen well_cat = 0 if cov_wellbeing < 17.5
+replace well_cat = 1 if cov_wellbeing >= 17.5 
 *now we want to create labels
 label variable well_cat "wellbeing Categories" 
 label define well_catf 0 "poor" 1 "good" 
 label values well_cat well_catf 
-drop a211 a212 a213 a214 a215 wellbeing wellbeing01
-
+drop a211 a212 a213 a214 a215 wellbeing wellbeing01 cov_wellbeing
 
 
 **# ------------------------------ NEW SUMMARY SCORES ----------------------
@@ -125,52 +125,68 @@ foreach var in a002 a003 a005 {
 
     drop temp1 temp2 temp_missing
 }
-gen cov_contact = (a002 + a003 + a005)
+gen cov_contact = a002 + a003 + a005
 codebook cov_contact
 drop a002 a003 a005
 
 
-*Generating categorical resilience
-drop if missing(res)
-gen res_cat = 0
-replace res_cat = 1 if res >= 3
-replace res_cat = 2 if res >= 4.31
-*labeling categories
-label variable res_cat "Resilience Categories"
-label define res_catf 0 "Low Resilience (1.00-2.99)" 1 "Normal Resilience (3.00-4.30)" 2 "High Resilience (4.31-5.00)"
-label values res_cat res_catf
-codebook res_cat
-codebook r3 // Victor's
-tab res_cat r3, chi2 exact
-
-*significant Fishers so drop r3
-drop r3 
-
-
-
+**# ------- Creating lists
 
 vl set
+vl list vlcontinuous
+vl list vluncertain 
+vl move (ageyears cov_effect cov_fear cov_psych cov_burden) vlcontinuous
+vl list vlcategorical
+vl drop (mental_cat) // dropping since it is our outcome variable for macros
 
 
 * ---------- LINEARITY CHECK
 
-* height_cm - need to include 2 term polynomial 
+* height_cm - linear 
 lowess mental_cat height_cm, logit 
 fp <height_cm>, scale center replace: logit mental_cat <height_cm>
-gen log_height_cm = log(height_cm)
-lowess mental_cat log_height_cm, logit 
-fp <log_height_cm>, scale center replace: logit mental_cat <log_height_cm>
 
-* weight_kg - log 
+* weight_kg - linear 
 lowess mental_cat weight_kg, logit
-gen log_weight_kg = log(weight_kg)
-lowess mental_cat log_weight_kg, logit
-fp <log_weight_kg>, scale center replace: logit mental_cat <log_weight_kg>
+fp <weight_kg>, scale center replace: logit mental_cat <weight_kg>
 
-* 
-fp <
+* ageyears - linear 
+lowess mental_cat ageyears, logit 
+fp <ageyears>, scale center replace: logit mental_cat <ageyears>
+
+* cov_burden - linear 
+lowess mental_cat cov_burden, logit 
+fp <cov_burden>, scale center replace: logit mental_cat <cov_burden>
+
+* cov_fear
+lowess mental_cat cov_fear, logit 
+fp <cov_fear>, scale center replace: logit mental_cat <cov_fear>
+gen log_cov_fear = log(cov_fear)
+lowess mental_cat log_cov_fear, logit 
+fp <log_cov_fear>, scale center replace: logit mental_cat <log_cov_fear>
 
 
+* cov_effect - linear 
+lowess mental_cat cov_effect, logit 
+fp <cov_effect>, scale center replace: logit mental_cat <cov_effect>
+
+* cov_psych 
+lowess mental_cat cov_psych, logit 
+fp <cov_psych>, scale center replace: logit mental_cat <cov_psych>
+
+gen log_cov_psych = log(cov_psych)
+lowess mental_cat log_cov_psych, logit 
+fp <log_cov_psych>, scale center replace: logit mental_cat <log_cov_psych>
+
+
+
+ height_cm | $vlcontinuous   noninteger           
+ weight_kg | $vlcontinuous   noninteger           
+  ageyears | $vlcontinuous   integers >=0       55
+cov_effect | $vlcontinuous   integers >=0       25
+  cov_fear | $vlcontinuous   integers >=0       21
+ cov_psych | $vlcontinuous   integers >=0       41
+cov_burden 
 
 
 
