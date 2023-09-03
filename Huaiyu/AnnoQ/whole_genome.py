@@ -51,7 +51,8 @@ ref = cdata["ref"] # reference
 alt = cdata["alt"] # mutation
 rs = cdata["rs_dbSNP151"] # rs ID
 
-# Extracting Gene ID in ANNOVAR
+
+""" Extracting Gene IDs"""
 AN_ID = extract(AN_ID_tog)
 
 # Extracting Gene ID in SnpEff
