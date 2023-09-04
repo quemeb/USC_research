@@ -15,6 +15,10 @@ drop if Ageyears < 18
 * Making all variables lower case... 
 rename _all, lower
 
+* Labeling insurance
+label define insuf 1 "None" 2 "Partial" 4 "Full Private" 10 "Full Public"
+label values insu insuf 
+
 *------------------ Creating MENTALHEALTH score from scratch 
 foreach var in a035 a036 a037 a038 a039 a040 a041 a042 a043 a044 a045 a046 a047 {
 	replace `var'=0 if `var'==2
@@ -37,6 +41,7 @@ drop a035 a036 a037 a038 a039 a040 a041 a042 a043 a044 a045 a046 a047 mental men
 drop heightincm weightinkg ver surveyversion n respondentid // variables provide no info
 drop a187 a188 a189 a190 a191 a174 a175 a176 // investigators not interested in these vars
 drop a180 // information already captured by a179
+drop _v2 // regrouped 
 
 *------------------ RESILIENCE  
 
@@ -135,9 +140,10 @@ drop a002 a003 a005
 vl set
 vl list vlcontinuous
 vl list vluncertain 
-vl move (ageyears cov_effect cov_fear cov_psych cov_burden) vlcontinuous
+vl move (ageyears cov_effect cov_fear cov_psych cov_burden cov_contact) vlcontinuous
 vl list vlcategorical
 vl drop (mental_cat) // dropping since it is our outcome variable for macros
+vl drop (res_cat)   // another outcome 
 
 
 * ---------- LINEARITY CHECK
@@ -154,39 +160,90 @@ fp <weight_kg>, scale center replace: logit mental_cat <weight_kg>
 lowess mental_cat ageyears, logit 
 fp <ageyears>, scale center replace: logit mental_cat <ageyears>
 
-* cov_burden - linear 
-lowess mental_cat cov_burden, logit 
-fp <cov_burden>, scale center replace: logit mental_cat <cov_burden>
+* cov_effect - linear 
+lowess mental_cat cov_effect, logit 
+fp <cov_effect>, scale center replace: logit mental_cat <cov_effect>
 
-* cov_fear
+* cov_fear - log 
 lowess mental_cat cov_fear, logit 
 fp <cov_fear>, scale center replace: logit mental_cat <cov_fear>
 gen log_cov_fear = log(cov_fear)
 lowess mental_cat log_cov_fear, logit 
 fp <log_cov_fear>, scale center replace: logit mental_cat <log_cov_fear>
+drop cov_fear 
 
-
-* cov_effect - linear 
-lowess mental_cat cov_effect, logit 
-fp <cov_effect>, scale center replace: logit mental_cat <cov_effect>
-
-* cov_psych 
+* cov_psych - log
 lowess mental_cat cov_psych, logit 
 fp <cov_psych>, scale center replace: logit mental_cat <cov_psych>
-
 gen log_cov_psych = log(cov_psych)
 lowess mental_cat log_cov_psych, logit 
 fp <log_cov_psych>, scale center replace: logit mental_cat <log_cov_psych>
+drop cov_psych 
+
+* cov_burden - linear 
+lowess mental_cat cov_burden, logit 
+fp <cov_burden>, scale center replace: logit mental_cat <cov_burden>
+
+vl rebuild 
+
+**# Bivariant analysis for Mental Health 
+
+* Categorical 
+global cat_variables "$vlcategorical res_cat"
+global cat_prelim ""
+
+foreach i in $cat_variables{
+	// create a two-way table of the predictor and the response variable
+	tab `i' mental_cat, exact  
+	// if the p-value is less than 0.25, add the variable to the list
+	if r(p_exact) < 0.25 {
+		global cat_prelim  "$cat_prelim `i' "
+	}
+}
+// display the variables with p-value < 0.25
+di "$cat_prelim"   // dropped Resilience, Sex, Work-from-home 
+
+* Continouos 
+global cont_variables "$vlcontinuous log_cov_fear log_cov_psych"
+global cont_prelim ""
+
+foreach i in $cont_variables{
+	// run the logistic regression
+	logit mental_cat `i', nolog 
+	// get the p-value
+    testparm `i'
+	// if the p-value is less than 0.25, add the variable to the list
+    if r(p) < 0.25 {
+        // Note the addition of $ before prelim_vars
+        global cont_prelim "$cont_prelim `i'"
+    }
+}
+// display the variables with p-value < 0.25
+di "$cont_prelim"
+
+
+global cat_prelim_expanded ""
+foreach var in $cat_prelim {
+	global cat_prelim_expanded "$cat_prelim_expanded i.`var'"
+}
+di "$cat_prelim_expanded"
+
+* prelimiary model 
+logit mental_cat $cat_prelim_expanded $cont_prelim, nolog 
+logit mental_cat $cat_prelim $cont_prelim, nolog 
+
+* stepwise 
+stepwise, pr(0.05): logit mental_cat $cat_prelim_expanded $cont_prelim, nolog
+stepwise, pr(0.05): logit mental_cat $cat_prelim $cont_prelim, nolog
 
 
 
- height_cm | $vlcontinuous   noninteger           
- weight_kg | $vlcontinuous   noninteger           
-  ageyears | $vlcontinuous   integers >=0       55
-cov_effect | $vlcontinuous   integers >=0       25
-  cov_fear | $vlcontinuous   integers >=0       21
- cov_psych | $vlcontinuous   integers >=0       41
-cov_burden 
+
+
+
+
+
+
 
 
 
