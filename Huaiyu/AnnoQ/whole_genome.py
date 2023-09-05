@@ -43,10 +43,10 @@ SN_ID_tog = cdata["SnpEff_ensembl_Gene_ID"]   #Gene ID for SnpEff
 SN_ID_intergenic = [SN_ID_tog[i] if gene_id == '.' else '.' for i, gene_id in enumerate(AN_ID_genic)]
 SN_ID_genic = [SN_ID_tog[i] if gene_id != "." else '.' for i, gene_id in enumerate(AN_ID_genic)]
 
+VP_ID_tog = cdata["VEP_ensembl_Gene_ID"]      #Gene ID for VEP
+VP_ID_intergenic = [VP_ID_tog[i] if gene_id == "." else "." for i, gene_id in enumerate(AN_ID_genic)]
+VP_ID_genic = [VP_ID_tog[i] if gene_id != "." else '.' for i, gene_id in enumerate(AN_ID_genic)]
 
-
-VP_ID_1 = cdata["VEP_ensembl_Gene_ID"]      #Gene ID for VEP
-VP_ID_intergenic = [VP_ID_1[i] if gene_id == "." else "." for i, gene_id in enumerate(AN_ID_genic)]
 
 chrs = cdata["chr"] # chromosome number
 pos = cdata["pos"] # SNP position
@@ -57,12 +57,19 @@ rs = cdata["rs_dbSNP151"] # rs ID
 
 """ Extracting Gene IDs"""
 AN_ID = extract(AN_ID_tog)
+AN_ID_int = extract(AN_ID_intergenic)
+AN_ID_gen = extract(AN_ID_genic)
 
 # Extracting Gene ID in SnpEff
-SN_ID = extract(SN_ID_1)
+SN_ID = extract(SN_ID_tog)
+SN_ID_int = extract(SN_ID_intergenic)
+SN_ID_gen = extract(AN_ID_genic)
 
 # Extracting Gene ID in VEP
-VP_ID = extract(VP_ID_1)
+VP_ID = extract(VP_ID_tog)
+VP_ID_int = extract(VP_ID_intergenic)
+VP_ID_gen = extract(VP_ID_genic)
+
 
 # Converting lists to arrays
 AN_ID = np.array(AN_ID, dtype=object)
