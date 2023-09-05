@@ -65,7 +65,7 @@ def main():
     # Extracting Gene ID in SnpEff
     SN_ID = extract(SN_ID_tog)
     SN_ID_int = extract(SN_ID_intergenic)
-    SN_ID_gen = extract(AN_ID_genic)
+    SN_ID_gen = extract(SN_ID_genic)
     
     # Extracting Gene ID in VEP
     VP_ID = extract(VP_ID_tog)
@@ -86,20 +86,10 @@ def main():
     size = len(AN_ID)
     
     
-    """  Summing total annotations in each tool  """
-    #This part will help us see the SNPs annotation rate by tool overall
-    
-    # Counting 
-    AN_total = sum(len(AN_ID_entry) for AN_ID_entry in AN_ID_clean)
-    SN_total = sum(len(SN_ID_entry) for SN_ID_entry in SN_ID_clean)
-    VP_total = sum(len(VP_ID_entry) for VP_ID_entry in VP_ID_clean)
-    
-    
-    """ Comparing Unique Gene IDs  """
+    """ Comparing Annotation agreement  """
     
     # Merging all Gene IDs
     united = [np.concatenate((AN_ID[i], SN_ID[i], VP_ID[i]), axis=None) for i in range(size)]
-    
     
     # Getting rid of repeats for each SNP
     unique_clean = no_repeats(united)
@@ -141,57 +131,16 @@ def main():
     
     """ RESULTS FILE CREATION """
     # Naming output file assuming .gz compression
-    filename_1 = filename.split("/")
-    filename_1 = filename_1[-1]
-    filename_1 = filename_1.split(".")
-    result_filename = filename_1[0]+"_processed."+filename_1[1] #adding the file extension
+    # filename_1 = filename.split("/")
+    # filename_1 = filename_1[-1]
+    # filename_1 = filename_1.split(".")
+    # result_filename = filename_1[0]+"_processed."+filename_1[1] #adding the file extension
     
     # Creating a .txt file with results inside
     #results.to_csv(path_or_buf=("/home1/queme/AnnoQ/processed_hrc_12_2019/"+result_filename), sep="\t", index=False)
     #/home1/queme/AnnoQ/processed_hrc_12_2019/  for personal_directory in my_HPC
-    
-    """ QUANTIFYING DIFFERENCES """
-    # Comparing SN vs AN
-    dif_SN_AN = difference(SN_ID_clean, AN_ID_clean)
-    dif_SN_AN_sum = counter(dif_SN_AN)
-    
-    int_SN_AN = inter(SN_ID_clean, AN_ID_clean)
-    int_SN_AN_sum = counter(int_SN_AN)
-    
-    int_SN_VP = inter(SN_ID_clean, VP_ID_clean)
-    int_SN_VP_sum = counter(int_SN_VP)
-    
-    int_AN_VP = inter(AN_ID_clean, VP_ID_clean)
-    int_AN_VP_sum = counter(int_AN_VP)
-    
-    
-    
-    # Comparing SN vs VP
-    dif_SN_VP = []
-    dif_SN_VP = difference(SN_ID_clean, VP_ID_clean)
-    dif_SN_VP_sum = counter(dif_SN_VP)
-    
-    # Comparing AN vs SN
-    dif_AN_SN = []
-    dif_AN_SN = difference(AN_ID_clean, SN_ID_clean)
-    dif_AN_SN_sum = counter(dif_AN_SN)
-    
-    # Comparing AN vs VP
-    dif_AN_VP = []
-    dif_AN_VP = difference(AN_ID_clean, VP_ID_clean)
-    dif_AN_VP_sum = counter(dif_AN_VP)
-    
-    # Comparing VP vs SN
-    dif_VP_SN = []
-    dif_VP_SN = difference(VP_ID_clean, SN_ID_clean)
-    dif_VP_SN_sum = counter(dif_VP_SN)
-    
-    # Comparing VP vs AN
-    dif_VP_AN = []
-    dif_VP_AN = difference(VP_ID_clean, AN_ID_clean)
-    dif_VP_AN_sum = counter(dif_VP_AN)
-    
-    
+
+
     """ COMPARING TOOLS TO ALL GENEIDS """
     all_agree = 0 #with GeneID union
     two_agree = 0 #with GeneID union
@@ -256,13 +205,7 @@ def main():
           \t - Annovar: %i \n
           \t - SnpEff: %i \n
           \t - VEP: %i \n""" % (one_agree, one_agree/size*100, AN_agree_1, SN_agree_1, VP_agree_1)
-    l_12= "No tool agrees with all GeneIDs:  %i (%.2f%%)\n\n" % (none_agree, none_agree/size*100)
-    l_2 = "%i \t in ANNOVAR \t but not in \t SnpEff  \n" % dif_AN_SN_sum
-    l_3 = "%i \t in ANNOVAR \t but not in \t VEP \n" % dif_AN_VP_sum
-    l_4 = "%i \t in SnpEff \t but not in \t ANNOVAR \n" % dif_SN_AN_sum
-    l_5 = "%i \t in SnpEff \t but not in \t VEP \n" % dif_SN_VP_sum
-    l_6 = "%i \t in VEP    \t but not in \t ANNOVAR \n" % dif_VP_AN_sum
-    l_7 = "%i \t in VEP    \t but not in \t SnpEff \n" % dif_VP_SN_sum
+
     
     # Creating a .txt file with the summary results
     summary_filename = filename_1[0]+"_summary."+filename_1[1]
