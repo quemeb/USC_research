@@ -47,7 +47,7 @@ VP_ID_tog = cdata["VEP_ensembl_Gene_ID"]      #Gene ID for VEP
 VP_ID_intergenic = [VP_ID_tog[i] if gene_id == "." else "." for i, gene_id in enumerate(AN_ID_genic)]
 VP_ID_genic = [VP_ID_tog[i] if gene_id != "." else '.' for i, gene_id in enumerate(AN_ID_genic)]
 
-
+# Extracting info from file
 chrs = cdata["chr"] # chromosome number
 pos = cdata["pos"] # SNP position
 ref = cdata["ref"] # reference
