@@ -35,15 +35,18 @@ url = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.tx
 cdata = pd.read_csv(url, delimiter="\t", dtype= object, compression='gzip')
 
 # Selecting data
-AN_ID_1 = cdata["ANNOVAR_ensembl_Gene_ID"]  #Gene ID should be here
+AN_ID_genic = cdata["ANNOVAR_ensembl_Gene_ID"]  #Gene ID should be here
 AN_ID_intergenic = cdata["ANNOVAR_ensembl_Closest_gene(intergenic_only)"]    #alternative place for Gene ID
-AN_ID_tog = [AN_ID_intergenic[i] if gene_id == "." else gene_id for i, gene_id in enumerate(AN_ID_1)]
+AN_ID_tog = [AN_ID_intergenic[i] if gene_id == "." else gene_id for i, gene_id in enumerate(AN_ID_genic)]
 
-SN_ID_1 = cdata["SnpEff_ensembl_Gene_ID"]   #Gene ID for SnpEff
-SN_ID_intergenic = [SN_ID_1[i] if gene_id == '.' else '.' for i, gene_id in enumerate(AN_ID_1)]
+SN_ID_tog = cdata["SnpEff_ensembl_Gene_ID"]   #Gene ID for SnpEff
+SN_ID_intergenic = [SN_ID_tog[i] if gene_id == '.' else '.' for i, gene_id in enumerate(AN_ID_genic)]
+SN_ID_genic = [SN_ID_tog[i] if gene_id != "." else '.' for i, gene_id in enumerate(AN_ID_genic)]
+
+
 
 VP_ID_1 = cdata["VEP_ensembl_Gene_ID"]      #Gene ID for VEP
-VP_ID_intergenic = [VP_ID_1[i] if gene_id == "." else "." for i, gene_id in enumerate(AN_ID_1)]
+VP_ID_intergenic = [VP_ID_1[i] if gene_id == "." else "." for i, gene_id in enumerate(AN_ID_genic)]
 
 chrs = cdata["chr"] # chromosome number
 pos = cdata["pos"] # SNP position
