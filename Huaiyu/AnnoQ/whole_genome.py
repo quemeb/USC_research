@@ -110,6 +110,7 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
 
 
 
+
 def main():
 
     """ DATA PROCESSING """
@@ -223,7 +224,7 @@ def main():
     #results.to_csv(path_or_buf=("/home1/queme/AnnoQ/processed_hrc_12_2019/"+result_filename), sep="\t", index=False)
     #/home1/queme/AnnoQ/processed_hrc_12_2019/  for personal_directory in my_HPC
 
-    
+    tool_agreement_tog = annotation_agreement_rate(unique_clean, AN_ID_check, SN_ID_check, VP_ID_check)
     
     """ SUMMARY FILE CREATION """
     # Summary results
