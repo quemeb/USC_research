@@ -7,6 +7,19 @@ import re
 # Precompile the regular expression
 pattern = re.compile("ENSG...........")
 
+def load_data(file_path):
+    df = pd.read_csv(file_path, delimiter="\t", dtype= object, compression='gzip')
+    return df
+
+def process_data(data):
+    pass
+
+def summarize_data(summary_data):
+    pass
+
+def write_sumary_to_file(summary_data):
+    pass 
+
 # Eliminating repeats
 def no_repeats(nparray):
     return [np.unique(arr) for arr in nparray]
@@ -27,14 +40,84 @@ def inter(array1,array2):
 def counter(arrays):
     return sum(1 for arr in arrays if arr.size > 0)
 
+def annotation_agreement_rate(uni_clean, AN, SN, VP):
+    # Initialize a dictionary to store various counts.
+    counters = {
+        'all_agree': 0,
+        'two_agree': 0,
+        'one_agree': 0,
+        'none_agree': 0,
+        'AN_SN_agree_2': 0,
+        'SN_VP_agree_2': 0,
+        'AN_VP_agree_2': 0,
+        'AN_agree_1': 0,
+        'SN_agree_1': 0,
+        'VP_agree_1': 0,
+    }
+
+    # Mapping for two-agree scenarios.
+    two_agree_mapping = {
+        'AS': 'AN_SN_agree_2',
+        'SV': 'SN_VP_agree_2',
+        'AV': 'AN_VP_agree_2'
+    }
+    
+    # Mapping for one-agree scenarios.
+    one_agree_mapping = {
+        'A': 'AN_agree_1',
+        'S': 'SN_agree_1',
+        'V': 'VP_agree_1'
+    }
+
+    # Iterate through the lists
+    for uni, an, sn, vp in zip(uni_clean, AN, SN, VP):
+        temp = 0  # Temporary counter for the loop.
+        des = []  # List to store which arrays agree with uni_clean.
+        
+        zize = len(uni)  # Length of the union set for this iteration.
+        
+        # Check if AN agrees with uni_clean and update counters.
+        if zize == len(an):
+            temp += 1
+            des.append('A')
+            
+        # Check if SN agrees with uni_clean and update counters.
+        if zize == len(sn):
+            temp += 1
+            des.append('S')
+            
+        # Check if VP agrees with uni_clean and update counters.
+        if zize == len(vp):
+            temp += 1
+            des.append('V')
+        
+        # Convert list to a string for easier matching.
+        des_str = ''.join(des)
+        
+        # Update the relevant counter based on how many arrays agreed with uni_clean.
+        if temp == 3:  # All agree
+            counters['all_agree'] += 1
+        elif temp == 2:  # Exactly two agree
+            counters['two_agree'] += 1
+            counters[two_agree_mapping[des_str]] += 1
+        elif temp == 1:  # Only one agrees
+            counters['one_agree'] += 1
+            counters[one_agree_mapping[des_str]] += 1
+        elif temp == 0:  # None agree
+            counters['none_agree'] += 1
+
+    return counters  # Return the counters dictionary.
+
+
+
 def main():
 
     """ DATA PROCESSING """
     
     """ File Input & Data Mining """
     # Reading file
-    url = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
-    cdata = pd.read_csv(url, delimiter="\t", dtype= object, compression='gzip')
+    file_path = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
+    cdata = load_data(file_path)
     
     # Selecting data
     AN_ID_genic = cdata["ANNOVAR_ensembl_Gene_ID"]  #Gene ID should be here
@@ -86,7 +169,7 @@ def main():
     size = len(AN_ID)
     
     
-    """ Comparing Annotation agreement  """
+    """ Comparing tools to 'master' annotiation  """
     
     # Merging all Gene IDs
     united = [np.concatenate((AN_ID[i], SN_ID[i], VP_ID[i]), axis=None) for i in range(size)]
@@ -115,7 +198,7 @@ def main():
         VP_ID_check.append(check_presence(unique_clean[i], VP_ID_clean[i]))
     
     
-    """ COMPARISON RESULTS ARRAY TABLE """
+    """ Giving table """
     # Creating results table
     d = {"Chr":chrs,
          "Position":pos,
@@ -140,57 +223,7 @@ def main():
     #results.to_csv(path_or_buf=("/home1/queme/AnnoQ/processed_hrc_12_2019/"+result_filename), sep="\t", index=False)
     #/home1/queme/AnnoQ/processed_hrc_12_2019/  for personal_directory in my_HPC
 
-
-    """ COMPARING TOOLS TO ALL GENEIDS """
-    all_agree = 0 #with GeneID union
-    two_agree = 0 #with GeneID union
-    one_agree = 0 #with GeneID union
-    none_agree= 0 #with GeneID union
-    AN_SN_agree_2 = 0 #missing from VP
-    SN_VP_agree_2 = 0 #missing form AN
-    AN_VP_agree_2 = 0 #missing from SN
-    AN_agree_1 = 0 #only AN
-    SN_agree_1 = 0 #only SN
-    VP_agree_1 = 0 #only VP
     
-    for i in range(0,size):
-      zize = len(unique_clean[i])
-      temp = 0
-      des = []
-      if zize == len(AN_ID_check[i]):
-        temp += 1
-        des.append("A")
-      if zize == len(SN_ID_check[i]):
-        temp += 1
-        des.append("S")
-      if zize == len(VP_ID_check[i]):
-        temp += 1
-        des.append("V")
-    
-    # assigning tool aggrements... 
-      if temp == 3:             # this means all should agree
-        all_agree += 1
-    
-      elif temp == 2:           # exactly two agree
-        two_agree += 1
-        if des == ["A","S"]:
-          AN_SN_agree_2 += 1
-        if des == ["S","V"]:
-          SN_VP_agree_2 += 1
-        if des == ["A","V"]:
-          AN_VP_agree_2 += 1
-    
-      elif temp == 1:           # exactly one agrees
-        one_agree += 1
-        if des == ["A"]:
-          AN_agree_1 += 1
-        if des == ["B"]:
-          SN_agree_1 += 1
-        if des == ["C"]:
-          VP_agree_1 += 1
-    
-      elif temp == 0:           # no tool has all GeneIDs
-        none_agree+= 1          # can hardly see it happening
     
     """ SUMMARY FILE CREATION """
     # Summary results
