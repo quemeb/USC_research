@@ -1,0 +1,113 @@
+---
+title: "AnnoQR2.0"
+author: "Bryan Queme"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r library}
+library(AnnoQR)
+```
+
+```{r}
+# Only using the basic annotation types
+basic.annotations = c("chr", "pos", "ref", "alt",
+                      "ANNOVAR_ensembl_Effect",
+                      "ANNOVAR_ensembl_Closest_gene(intergenic_only)",
+                      "ANNOVAR_ensembl_summary",
+                      "SnpEff_ensembl_Effect",
+                      "SnpEff_ensembl_Effect_impact",
+                      "SnpEff_ensembl_Gene_name",
+                      "SnpEff_ensembl_Gene_ID",
+                      "SnpEff_ensembl_HGVSc",
+                      "SnpEff_ensembl_summary",
+                      "VEP_ensembl_Consequence",
+                      "VEP_ensembl_summary",
+                      "ANNOVAR_refseq_Effect",
+                      "ANNOVAR_refseq_Closest_gene(intergenic_only)",
+                      "ANNOVAR_refseq_summary",
+                      "SnpEff_refseq_Effect",
+                      "SnpEff_refseq_Effect_impact",
+                      "SnpEff_refseq_Gene_name",
+                      "SnpEff_refseq_Gene_ID",
+                      "SnpEff_refseq_HGVSc",
+                      "SnpEff_refseq_summary",
+                      "VEP_refseq_Consequence",
+                      "VEP_refseq_summary",
+                      "ANNOVAR_ucsc_Effect",
+                      "ANNOVAR_ucsc_Closest_gene(intergenic_only)",
+                      "ANNOVAR_ucsc_summary",
+                      "rs_dbSNP151")
+```
+
+
+```{r, region extraction function}
+
+# Number of hits
+hits = function(variants){
+  # Finding number of hits
+  len = length(variants$hits$hits)
+
+  # Creating an emtpy data frame
+  n = length(basic.annotations)
+  df = data.frame(matrix(ncol=n, nrow=0))
+  colnames(df) = basic.annotations
+  
+  # Filling the data frame with annotation info
+  for(i in 1:len){
+    for(j in 1:n){
+      # Checking for no annotations return call
+      if(length(variants$hits$hits) != 0){
+        # Checking for annotations not to be empty
+        if(length(variants$hits$hits[[i]]$'_source'[[basic.annotations[j]]]) == 0){
+          df[i,j] = " "
+        }else{
+          df[i,j] = variants$hits$hits[[i]]$'_source'[[basic.annotations[j]]]
+        }
+      }
+      else{next}
+    }
+  }
+  return(df)
+}
+
+```
+
+```{r, example}
+variants = regionQuery(contig = '20', start=26188600, end=26190799)
+
+x <- hits(variants)
+
+```
+
+```{r, data intake}
+#ifile <- choose.files()
+ifile <- "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\ex_peaks.csv"
+cdata <- read.csv(ifile)
+
+```
+
+```{r, multiple regions}
+
+# Length of region file
+len.regions = length(cdata$chr)
+
+# Creating an empty data frame
+n = length(basic.annotations)
+df.all = data.frame(matrix(ncol=n, nrow=0))
+names(df.all) <- basic.annotations
+
+for(i in 1:len.regions){
+  variants = regionQuery(contig = cdata$chr[i], start = cdata$start[i], end=cdata$end[i])
+  x <- hits(variants)
+  df.all <- rbind(df.all, "region"=i, x)
+}
+
+```
+
+```{r, output table}
+
+write.table(df.all, "ex_peaks.txt", sep = "\t", row.names = FALSE, quote = FALSE)
+
+```
+
