@@ -71,6 +71,11 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
 
     # Iterate through the lists
     for uni, an, sn, vp in zip(uni_clean, AN, SN, VP):
+        
+        # Skip the loop iteration if any value is '.'
+        if '.' in [uni, an, sn, vp]:
+            continue
+        
         temp = 0  # Temporary counter for the loop.
         des = []  # List to store which arrays agree with uni_clean.
         
@@ -108,14 +113,62 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
 
     return counters  # Return the counters dictionary.
 
+def save_processed_file(filename, results, output_directory="/home1/queme/AnnoQ/processed_hrc_12_2019/"):
+    """
+    Saves the processed results to a new file.
+
+    Parameters:
+    - filename: str
+        The original filename.
+    - results: pd.DataFrame
+        The processed results to be saved.
+    - output_directory: str, optional
+        The directory where the processed file will be saved. Default is "/home1/queme/AnnoQ/processed_hrc_12_2019/"
+    - Example usage
+        save_processed_file("your/original/filename.txt", results_dataframe)
+    """
+    
+    # Extracting the base filename and extension
+    base_filename = filename.split("/")[-1]
+    name_parts = base_filename.split(".")
+    
+    # Creating the processed filename
+    result_filename = f"{name_parts[0]}_processed.{name_parts[1]}"
+    
+    # Saving the results to a .txt file
+    output_path = f"{output_directory}{result_filename}"
+    results.to_csv(path_or_buf=output_path, sep="\t", index=False)
+
+def create_summary_file(chr, size, all_agree, two_agree, AN_agree_2, SN_agree_2, VP_agree_2, one_agree, AN_agree_1, SN_agree_1, VP_agree_1, filename_1):
+    """Create and save a summary file."""
+    
+    summary_lines = [
+        f"For Chromosome: {chr[1]}\n",
+        f"There are: {size} SNPs\n\n",
+        f"All tools agree with all GeneIDs: {all_agree} ({all_agree/size*100:.2f}%)\n",
+        f"""At least two tools agree with all GeneIDs: {two_agree} ({two_agree/size*100:.2f}%)
+          \t - Annovar: {AN_agree_2}\n
+          \t - SnpEff: {SN_agree_2}\n
+          \t - VEP: {VP_agree_2}\n""",
+        f"""At least one tool agrees with all GeneIDs: {one_agree} ({one_agree/size*100:.2f}%)
+          \t - Annovar: {AN_agree_1}\n
+          \t - SnpEff: {SN_agree_1}\n
+          \t - VEP: {VP_agree_1}\n"""
+    ]
+    
+    summary_filename = f"{filename_1[0]}_summary.{filename_1[1]}"
+    output_path = f"/home1/queme/AnnoQ/processed_hrc_12_2019/{summary_filename}"
+    
+    with open(output_path, "w+") as f:
+        f.writelines(summary_lines)
+
+# Example usage
+#create_summary_file(chr, size, all_agree, two_agree, AN_agree_2, SN_agree_2, VP_agree_2, one_agree, AN_agree_1, SN_agree_1, VP_agree_1, filename_1)
 
 
 
 def main():
 
-    """ DATA PROCESSING """
-    
-    """ File Input & Data Mining """
     # Reading file
     file_path = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
     cdata = load_data(file_path)
@@ -142,45 +195,47 @@ def main():
 
 
     """ Extracting Gene IDs"""
-    AN_ID = extract(AN_ID_tog)
     AN_ID_int = extract(AN_ID_intergenic)
     AN_ID_gen = extract(AN_ID_genic)
     
     # Extracting Gene ID in SnpEff
-    SN_ID = extract(SN_ID_tog)
     SN_ID_int = extract(SN_ID_intergenic)
     SN_ID_gen = extract(SN_ID_genic)
     
     # Extracting Gene ID in VEP
-    VP_ID = extract(VP_ID_tog)
     VP_ID_int = extract(VP_ID_intergenic)
     VP_ID_gen = extract(VP_ID_genic)
 
     
     # Converting lists to arrays
-    AN_ID = np.array(AN_ID, dtype=object)
-    SN_ID = np.array(SN_ID, dtype=object)
-    VP_ID = np.array(VP_ID, dtype=object)
+    AN_ID_inter = np.array(AN_ID_int, dtype=object)
+    SN_ID_inter = np.array(SN_ID_int, dtype=object)
+    VP_ID_inter = np.array(VP_ID_int, dtype=object)
     
-    # Getting rid of repeated Gene IDs
-    AN_ID_clean = no_repeats(AN_ID)
-    SN_ID_clean = no_repeats(SN_ID)
-    VP_ID_clean = no_repeats(VP_ID)
+    AN_ID_genic = np.array(AN_ID_gen, dtype=object)
+    SN_ID_genic = np.array(SN_ID_gen, dtype=object)
+    VP_ID_genic = np.array(VP_ID_gen, dtype=object)
     
-    size = len(AN_ID)
-    
+    size_inter = len(AN_ID_inter)
+    size_genic = len(AN_ID_genic)
     
     """ Comparing tools to 'master' annotiation  """
     
     # Merging all Gene IDs
-    united = [np.concatenate((AN_ID[i], SN_ID[i], VP_ID[i]), axis=None) for i in range(size)]
+    united_inter = [np.concatenate((AN_ID_inter[i], SN_ID_inter[i], VP_ID_inter[i]), axis=None) for i in range(size_inter)]
+    united_genic = [np.concatenate((AN_ID_genic[i], SN_ID_genic[i], VP_ID_genic[i]), axis=None) for i in range(size_genic)]
+    
     
     # Getting rid of repeats for each SNP
-    unique_clean = no_repeats(united)
+    unique_inter_clean = no_repeats(united_inter)
+    unique_genic_clean = no_repeats(united_genic)
     
-    AN_ID_check = []
-    SN_ID_check = []
-    VP_ID_check = []
+    AN_ID_inter_check = []
+    AN_ID_genic_check = []
+    SN_ID_inter_check = []
+    SN_ID_genic_check = []
+    VP_ID_inter_check = []
+    VP_ID_genic_check = []
     
     
     # Parsing through dataset
@@ -199,46 +254,31 @@ def main():
         VP_ID_check.append(check_presence(unique_clean[i], VP_ID_clean[i]))
     
     
+    
     """ Giving table """
     # Creating results table
-    d = {"Chr":chrs,
-         "Position":pos,
-         "Ref":ref,
-         "Alt":alt,
-         "rs ID":rs,
-         "Gene_IDs":unique_clean,
-         "ANNOVAR":AN_ID_check,
-         "SnpEff":SN_ID_check,
-         "VEP":VP_ID_check}
+    column_names = ["Chr", "Position", "Ref", "Alt", "rs ID", "Gene_IDs", "ANNOVAR", "SnpEff", "VEP"]
+    data_values = [chrs, pos, ref, alt, rs, unique_clean, AN_ID_check, SN_ID_check, VP_ID_check]
     
-    results = pd.DataFrame(d)
+    results = pd.DataFrame({col: val for col, val in zip(column_names, data_values)})
+
     
     """ RESULTS FILE CREATION """
-    # Naming output file assuming .gz compression
-    # filename_1 = filename.split("/")
-    # filename_1 = filename_1[-1]
-    # filename_1 = filename_1.split(".")
-    # result_filename = filename_1[0]+"_processed."+filename_1[1] #adding the file extension
-    
-    # Creating a .txt file with results inside
-    #results.to_csv(path_or_buf=("/home1/queme/AnnoQ/processed_hrc_12_2019/"+result_filename), sep="\t", index=False)
-    #/home1/queme/AnnoQ/processed_hrc_12_2019/  for personal_directory in my_HPC
+
+    save_processed_file(file_path, results)
+
+    """  HYPOTHESIS TESTING  """
 
     tool_agreement_tog = annotation_agreement_rate(unique_clean, AN_ID_check, SN_ID_check, VP_ID_check)
+    tool_agreement_intergenic = annotation_agreement_rate(unique_clean, AN, SN, VP)
+    tool_agreement_genetic = annotation_agreement_rate(unique_clean, )
     
     """ SUMMARY FILE CREATION """
     # Summary results
     l_1 = "For Chromosome: " + chr[1] + "\n"
-    l_8 = "There are: %i" % size + " SNPs\n\n"
-    l_9 = "All tools agree with all GeneIDs: %i (%.2f%%) \n" % (all_agree, all_agree/size*100)
-    l_10= """At least two tools agree with all GeneIDs: %i (%.2f%%)
-          \t - Annovar: %i \n
-          \t - SnpEff: %i  \n
-          \t - VEP: %i \n""" % (two_agree, two_agree/size*100, AN_agree_2, SN_agree_2, VP_agree_2)
-    l_11= """At least one tool agrees with all GeneIDs: %i (%.2f%%)
-          \t - Annovar: %i \n
-          \t - SnpEff: %i \n
-          \t - VEP: %i \n""" % (one_agree, one_agree/size*100, AN_agree_1, SN_agree_1, VP_agree_1)
+    l_2 = "There are: %i" % size + " SNPs\n\n"
+    l_3 = f"The agreement between all tools is: {tool_agreement_tog}"
+
 
     
     # Creating a .txt file with the summary results
