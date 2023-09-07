@@ -166,6 +166,19 @@ def create_summary_file(chr, size, all_agree, two_agree, AN_agree_2, SN_agree_2,
 #create_summary_file(chr, size, all_agree, two_agree, AN_agree_2, SN_agree_2, VP_agree_2, one_agree, AN_agree_1, SN_agree_1, VP_agree_1, filename_1)
 
 
+def annotation_single_to_master(unique_clean, target, source, size):
+    # Parsing through dataset
+    for i in range(size):
+        zize = len(unique_clean[i])  # number of Gene IDs
+    
+        # Helper function to check presence
+        def check_presence(target, source):
+            if zize == 1:
+                return [zize] if target in source else []
+            elif zize > 1:
+                return [x + 1 for x in range(zize) if target[x] in source]
+    
+
 
 def main():
 
@@ -179,12 +192,13 @@ def main():
     AN_ID_tog = [AN_ID_intergenic[i] if gene_id == "." else gene_id for i, gene_id in enumerate(AN_ID_genic)]
     
     SN_ID_tog = cdata["SnpEff_ensembl_Gene_ID"]   #Gene ID for SnpEff
-    SN_ID_intergenic = [SN_ID_tog[i] if gene_id == '.' else '.' for i, gene_id in enumerate(AN_ID_genic)]
-    SN_ID_genic = [SN_ID_tog[i] if gene_id != "." else '.' for i, gene_id in enumerate(AN_ID_genic)]
+    SN_ID_intergenic = [SN_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if gene_id == '.']
+    SN_ID_genic = [SN_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if gene_id != '.']
+
     
     VP_ID_tog = cdata["VEP_ensembl_Gene_ID"]      #Gene ID for VEP
-    VP_ID_intergenic = [VP_ID_tog[i] if gene_id == "." else "." for i, gene_id in enumerate(AN_ID_genic)]
-    VP_ID_genic = [VP_ID_tog[i] if gene_id != "." else '.' for i, gene_id in enumerate(AN_ID_genic)]
+    VP_ID_intergenic = [VP_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if gene_id == "." ]
+    VP_ID_genic = [VP_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if gene_id != "."]
     
     # Extracting info from file
     chrs = cdata["chr"] # chromosome number
@@ -237,6 +251,8 @@ def main():
     VP_ID_inter_check = []
     VP_ID_genic_check = []
     
+    
+    AN_ID_inter_check = annotation_single_to_master(unique_clean_inter, AN_ID_inter, united_inter, size_inter)
     
     # Parsing through dataset
     for i in range(size):
