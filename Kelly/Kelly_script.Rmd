@@ -25,7 +25,7 @@ library(AnnoQR)
 
 ```{r}
 # Only using the basic annotation types
-basic.annotations = c("chr", "pos", "ref", "alt",
+basic_annotations = c("chr", "pos", "ref", "alt",
                       "ANNOVAR_ensembl_Effect",
                       "ANNOVAR_ensembl_Closest_gene(intergenic_only)",
                       "ANNOVAR_ensembl_summary",
@@ -86,41 +86,50 @@ hits <- function(variants) {
 
 ```
 
-```{r, example}
-variants = regionQuery(contig = '20', start=26188600, end=26190799)
-
-x <- hits(variants)
-
-```
-
 ```{r, data intake}
 #ifile <- choose.files()
-ifile <- "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\ex_peaks.csv"
-cdata <- read.csv(ifile)
+url <- "https://raw.githubusercontent.com/quemeb/USC_research/main/Kelly/ex_peaks_example.csv"
+cdata <- read.csv(url)
 
 ```
 
 ```{r, multiple regions}
 
-# Length of region file
-len.regions = length(cdata$chr)
-
-# Creating an empty data frame
-n = length(basic.annotations)
-df.all = data.frame(matrix(ncol=n, nrow=0))
-names(df.all) <- basic.annotations
-
-for(i in 1:len.regions){
-  variants = regionQuery(contig = cdata$chr[i], start = cdata$start[i], end=cdata$end[i])
-  x <- hits(variants)
-  df.all <- rbind(df.all, "region"=i, x)
+# Function to retrieve hits for each region
+get_hits_for_region <- function(chr, start, end) {
+  variants = regionQuery(contig = chr, start = start, end = end)
+  hits(variants)
 }
+
+# Function to fetch all hits
+get_all_hits <- function(cdata, basic_annotations) {
+  len_regions <- nrow(cdata)
+  
+  # List to store individual data frames
+  list_df <- vector("list", len_regions)
+  
+  # Loop through each region
+  for(i in seq_len(len_regions)) {
+    list_df[[i]] <- get_hits_for_region(cdata$chr[i], cdata$start[i], cdata$end[i])
+  }
+  
+  # Combine all data frames into one
+  df_all <- do.call(rbind, list_df)
+  
+  # Add column names
+  colnames(df_all) <- basic_annotations
+  
+  return(df_all)
+}
+
+df_all <- get_all_hits(cdata, basic_annotations)
+
 
 ```
 
 ```{r, output table}
 
-write.table(df.all, "ex_peaks.txt", sep = "\t", row.names = FALSE, quote = FALSE)
+write.table(df_all, "ex_peaks.txt", sep = "\t", row.names = FALSE, quote = FALSE)
 
 ```
 
