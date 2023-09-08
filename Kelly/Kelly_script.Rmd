@@ -6,8 +6,21 @@ output: html_document
 ---
 
 ```{r library}
+# Try to load AnnoQR
+if (!requireNamespace("AnnoQR", quietly = TRUE)) {
+  # Check for devtools and install it if necessary
+  if (!requireNamespace("devtools", quietly = TRUE)) {
+    install.packages("devtools")
+  }
+  # Load devtools
+  library(devtools)
+  # Install AnnoQR from GitHub
+  install_github("USCbiostats/AnnoQR")
+}
 
+# Load AnnoQR
 library(AnnoQR)
+
 ```
 
 ```{r}
@@ -44,31 +57,30 @@ basic.annotations = c("chr", "pos", "ref", "alt",
 
 ```{r, region extraction function}
 
-# Number of hits
-hits = function(variants){
+hits <- function(variants) {
   # Finding number of hits
-  len = length(variants$hits$hits)
-
-  # Creating an emtpy data frame
-  n = length(basic.annotations)
-  df = data.frame(matrix(ncol=n, nrow=0))
-  colnames(df) = basic.annotations
+  len <- length(variants$hits$hits)
   
-  # Filling the data frame with annotation info
-  for(i in 1:len){
-    for(j in 1:n){
-      # Checking for no annotations return call
-      if(length(variants$hits$hits) != 0){
-        # Checking for annotations not to be empty
-        if(length(variants$hits$hits[[i]]$'_source'[[basic.annotations[j]]]) == 0){
-          df[i,j] = " "
-        }else{
-          df[i,j] = variants$hits$hits[[i]]$'_source'[[basic.annotations[j]]]
-        }
-      }
-      else{next}
+  # Early return if no annotations
+  if (len == 0) {
+    return(data.frame())
+  }
+  
+  # Creating an empty data frame with pre-allocated size
+  n <- length(basic.annotations)
+  df <- data.frame(matrix(ncol = n, nrow = len))
+  colnames(df) <- basic.annotations
+  
+  # Loop through hits and annotations
+  for (i in seq_len(len)) {
+    hit <- variants$hits$hits[[i]]$'_source'
+    for (j in seq_along(basic.annotations)) {
+      annotation <- basic.annotations[j]
+      # Fill the data frame with annotation info
+      df[i, j] <- ifelse(is.null(hit[[annotation]]), " ", hit[[annotation]])
     }
   }
+  
   return(df)
 }
 
