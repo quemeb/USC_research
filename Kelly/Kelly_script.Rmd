@@ -87,7 +87,7 @@ hits <- function(variants) {
 ```
 
 ```{r, data intake}
-#ifile <- choose.files()
+#url <- choose.files()
 url <- "https://raw.githubusercontent.com/quemeb/USC_research/main/Kelly/ex_peaks_example.csv"
 cdata <- read.csv(url)
 
@@ -129,7 +129,8 @@ df_all <- get_all_hits(cdata, basic_annotations)
 
 ```{r, output table}
 
-write.table(df_all, "ex_peaks.txt", sep = "\t", row.names = FALSE, quote = FALSE)
+save_path <- file.choose(new = TRUE)
+write.table(df_all, "ex_peaks.txt", sep = "\t", row.names = FALSE, quote = FALSE, file = save_path)
 
 ```
 
