@@ -1,11 +1,9 @@
----
-title: "AnnoQR2.0"
-author: "Bryan Queme"
-date: "`r Sys.Date()`"
-output: github_document
----
+AnnoQR2.0
+================
+Bryan Queme
+2023-09-08
 
-```{r library}
+``` r
 # Try to load AnnoQR
 if (!requireNamespace("AnnoQR", quietly = TRUE)) {
   # Check for devtools and install it if necessary
@@ -20,10 +18,9 @@ if (!requireNamespace("AnnoQR", quietly = TRUE)) {
 
 # Load AnnoQR
 library(AnnoQR)
-
 ```
 
-```{r}
+``` r
 # Only using the basic annotation types
 basic_annotations = c("chr", "pos", "ref", "alt",
                       "ANNOVAR_ensembl_Effect",
@@ -54,9 +51,7 @@ basic_annotations = c("chr", "pos", "ref", "alt",
                       "rs_dbSNP151")
 ```
 
-
-```{r, region extraction function}
-
+``` r
 hits <- function(variants) {
   # Finding number of hits
   len <- length(variants$hits$hits)
@@ -83,18 +78,15 @@ hits <- function(variants) {
   
   return(df)
 }
-
 ```
 
-```{r, data intake}
+``` r
 #url <- choose.files()
 url <- "https://raw.githubusercontent.com/quemeb/USC_research/main/Kelly/ex_peaks_example.csv"
 cdata <- read.csv(url)
-
 ```
 
-```{r, multiple regions}
-
+``` r
 # Function to retrieve hits for each region
 get_hits_for_region <- function(chr, start, end) {
   variants = regionQuery(contig = chr, start = start, end = end)
@@ -123,13 +115,8 @@ get_all_hits <- function(cdata, basic_annotations) {
 }
 
 df_all <- get_all_hits(cdata, basic_annotations)
-
-
 ```
 
-```{r, output table}
-
+``` r
 write.table(df_all, "ex_peaks.txt", sep = "\t", row.names = FALSE, quote = FALSE)
-
 ```
-
