@@ -224,7 +224,7 @@ di "$cont_prelim"
 
 global cat_prelim_expanded ""
 foreach var in $cat_prelim {
-	global cat_prelim_expanded "$cat_prelim_expanded i.`var'"
+	global cat_prelim_expanded "$cat_prelim_expanded (i.`var')"
 }
 di "$cat_prelim_expanded"
 
@@ -233,8 +233,18 @@ logit mental_cat $cat_prelim_expanded $cont_prelim, nolog
 logit mental_cat $cat_prelim $cont_prelim, nolog 
 
 * stepwise 
-stepwise, pr(0.05): logit mental_cat $cat_prelim_expanded $cont_prelim, nolog
+stepwise, pr(0.1): logit mental_cat $cat_prelim_expanded $cont_prelim, nolog or
+
 stepwise, pr(0.05): logit mental_cat $cat_prelim $cont_prelim, nolog
+
+
+
+
+
+
+
+
+
 
 
 
