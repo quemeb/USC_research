@@ -232,18 +232,26 @@ di "$cat_prelim_expanded"
 logit mental_cat $cat_prelim_expanded $cont_prelim, nolog 
 logit mental_cat $cat_prelim $cont_prelim, nolog 
 
-* stepwise 
+* stepwise models 
 stepwise, pr(0.1): logit mental_cat $cat_prelim_expanded $cont_prelim, nolog or
+stepwise, pe(0.05): logit mental_cat $cat_prelim_expanded $cont_prelim, nolog or
+stepwise, pr(0.1) pe(0.05): logit mental_cat $cat_prelim_expanded $cont_prelim, nolog or
 
-stepwise, pr(0.05): logit mental_cat $cat_prelim $cont_prelim, nolog
-
-
-
-
+* checking for significance in the terms taken out earlier
 
 
 
 
+logit mental_cat region01 i.insu i.religion01 i._v3 well_cat log_cov_psych cov_contact ib3._v1, nolog or 
+
+
+
+
+
+
+
+
+stepwise, pr(0.1): mlogit res_cat $cat_prelim_expanded $cont_prelim, nolog rrr
 
 
 
