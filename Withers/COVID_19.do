@@ -75,14 +75,14 @@ drop covid_effect a162 a163 a164 a165 a166 a167
 
 gen cov_fear = (a168 + a169 + a170 + a171 + a172)
 codebook cov_fear
-hist cov_fear, frequency normal title("distribution of cov_fear")
+//hist cov_fear, frequency normal title("distribution of cov_fear")
 drop covid_fear a168 a169 a170 a171 a172
 
 *------------------ COVID_PHYCH 
 
 gen cov_psych = a173 + a177 + a178 + a179 + a181 + a182 + a183 + a184 + a185 + a186
 codebook cov_psych
-hist cov_psych, frequency normal title("distribution of cov_psych")
+//hist cov_psych, frequency normal title("distribution of cov_psych")
 drop covid_psych a173 a177 a178 a179 a181 a182 a183 a184 a185 a186
 
 *------------------ WELLBEING
@@ -91,12 +91,12 @@ drop covid_psych a173 a177 a178 a179 a181 a182 a183 a184 a185 a186
 gen cov_wellbeing = a211 + a212 + a213 + a214 + a215
 codebook cov_wellbeing
 codebook wellbeing
-hist cov_wellbeing, frequency normal title ("dist of cov_wellbeing")
-hist wellbeing, frequency normal title("Distribution of wellbeing")
+//hist cov_wellbeing, frequency normal title ("dist of cov_wellbeing")
+//hist wellbeing, frequency normal title("Distribution of wellbeing")
 signrank cov_wellbeing=wellbeing 
 *make categories
-gen well_cat = 0 if cov_wellbeing < 17.5
-replace well_cat = 1 if cov_wellbeing >= 17.5 
+gen well_cat = 0 if cov_wellbeing >= 17.5
+replace well_cat = 1 if cov_wellbeing < 17.5 
 *now we want to create labels
 label variable well_cat "wellbeing Categories" 
 label define well_catf 0 "poor" 1 "good" 
@@ -149,39 +149,39 @@ vl drop (res_cat)   // another outcome
 * ---------- LINEARITY CHECK
 
 * height_cm - linear 
-lowess mental_cat height_cm, logit 
+//lowess mental_cat height_cm, logit 
 fp <height_cm>, scale center replace: logit mental_cat <height_cm>
 
 * weight_kg - linear 
-lowess mental_cat weight_kg, logit
+//lowess mental_cat weight_kg, logit
 fp <weight_kg>, scale center replace: logit mental_cat <weight_kg>
 
 * ageyears - linear 
-lowess mental_cat ageyears, logit 
+//lowess mental_cat ageyears, logit 
 fp <ageyears>, scale center replace: logit mental_cat <ageyears>
 
 * cov_effect - linear 
-lowess mental_cat cov_effect, logit 
+//lowess mental_cat cov_effect, logit 
 fp <cov_effect>, scale center replace: logit mental_cat <cov_effect>
 
 * cov_fear - log 
-lowess mental_cat cov_fear, logit 
+//lowess mental_cat cov_fear, logit 
 fp <cov_fear>, scale center replace: logit mental_cat <cov_fear>
 gen log_cov_fear = log(cov_fear)
-lowess mental_cat log_cov_fear, logit 
+//lowess mental_cat log_cov_fear, logit 
 fp <log_cov_fear>, scale center replace: logit mental_cat <log_cov_fear>
 drop cov_fear 
 
 * cov_psych - log
-lowess mental_cat cov_psych, logit 
+//lowess mental_cat cov_psych, logit 
 fp <cov_psych>, scale center replace: logit mental_cat <cov_psych>
 gen log_cov_psych = log(cov_psych)
-lowess mental_cat log_cov_psych, logit 
+//lowess mental_cat log_cov_psych, logit 
 fp <log_cov_psych>, scale center replace: logit mental_cat <log_cov_psych>
 drop cov_psych 
 
 * cov_burden - linear 
-lowess mental_cat cov_burden, logit 
+//lowess mental_cat cov_burden, logit 
 fp <cov_burden>, scale center replace: logit mental_cat <cov_burden>
 
 vl rebuild 
@@ -203,7 +203,26 @@ foreach i in $cat_variables{
 // display the variables with p-value < 0.25
 di "$cat_prelim"   // dropped Resilience, Sex, Work-from-home 
 
-* Continouos 
+* Removed categoricals
+global leftover_cat ""
+foreach var in $cat_variables {
+    local found 0
+    foreach pre in $cat_prelim {
+        if ("`var'" == "`pre'") {
+            local found 1
+        }
+    }
+    if (`found' == 0) {
+        global leftover_cat "$leftover_cat `var'"
+    }
+}
+
+// Display the unique variables
+display "The removed categorical variables are: $leftover_cat"
+
+
+
+* ---- Continouos ---
 global cont_variables "$vlcontinuous log_cov_fear log_cov_psych"
 global cont_prelim ""
 
@@ -219,8 +238,27 @@ foreach i in $cont_variables{
     }
 }
 // display the variables with p-value < 0.25
-di "$cont_prelim"
+di "$cont_prelim"	// dropped nothing
 
+* Removed continuous 
+global leftover_cont ""
+foreach var in $cont_variables {
+    local found 0
+    foreach pre in $cont_prelim {
+        if ("`var'" == "`pre'") {
+            local found 1
+        }
+    }
+    if (`found' == 0) {
+        global leftover_cont "$leftover_cont `var'"
+    }
+}
+
+// Display the unique variables
+display "The removed categorical variables are: $leftover_cont"
+
+
+* ---- Fixing categoricals 
 
 global cat_prelim_expanded ""
 foreach var in $cat_prelim {
@@ -237,13 +275,26 @@ stepwise, pr(0.1): logit mental_cat $cat_prelim_expanded $cont_prelim, nolog or
 stepwise, pe(0.05): logit mental_cat $cat_prelim_expanded $cont_prelim, nolog or
 stepwise, pr(0.1) pe(0.05): logit mental_cat $cat_prelim_expanded $cont_prelim, nolog or
 
+// need to explain the log-transformed meaning increase 
+// ex. OR=2, an increase in independent variable by a factor of ~2.7 will double the odds of the mental_cat 
+
 * checking for significance in the terms taken out earlier
+global leftover_cat_expanded ""
+foreach var in $leftover_cat {
+	global leftover_cat_expanded "$leftover_cat_expanded (i.`var')"
+}
+di "$leftover_cat_expanded"
 
+* ---------- 
+sw, pr(0.1): logit mental_cat region01 i.insu i.religion01 i._v3 well_cat log_cov_psych cov_contact ib3._v1 $leftover_cat $leftover_cont, nolog or 
 
-
-
+* --- prelim final model
 logit mental_cat region01 i.insu i.religion01 i._v3 well_cat log_cov_psych cov_contact ib3._v1, nolog or 
 
+* --  potential effect modifiers 
+global "sex01 ageyears race01"
+
+foreach i in $
 
 
 
