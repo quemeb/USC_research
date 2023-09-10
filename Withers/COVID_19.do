@@ -19,6 +19,11 @@ rename _all, lower
 label define insuf 1 "None" 2 "Partial" 4 "Full Private" 10 "Full Public"
 label values insu insuf 
 
+// dropping more stuff
+drop if race01 == 4
+drop if religion01 == 3 | religion01 == 4 | religion01 == 5 | religion01 == 6
+
+
 *------------------ Creating MENTALHEALTH score from scratch 
 foreach var in a035 a036 a037 a038 a039 a040 a041 a042 a043 a044 a045 a046 a047 {
 	replace `var'=0 if `var'==2
@@ -115,6 +120,7 @@ foreach var in $burden {
 gen cov_burden = (a192 + a193 + a194 + a195 + a196 + a197 + a198 + a199 + a200 + a201 + a202 + a203 + a204 + a205 + a206 + a207 + a208 + a209 + a210)
 codebook cov_burden
 drop a192 a193 a194 a195 a196 a197 a198 a199 a200 a201 a202 a203 a204 a205 a206 a207 a208 a209 a210
+
 
 * -- Generating COVID_CONTACT
 
@@ -268,8 +274,6 @@ di "$cat_prelim_expanded"
 
 * stepwise models 
 stepwise, pr(0.1): logit mental_cat $cat_prelim_expanded $cont_prelim , nolog or
-stepwise, pe(0.05): logit mental_cat $cat_prelim_expanded $cont_prelim, nolog or
-stepwise, pr(0.1) pe(0.05): logit mental_cat $cat_prelim_expanded $cont_prelim, nolog or
 
 // need to explain the log-transformed meaning increase 
 // ex. OR=2, an increase in independent variable by a factor of ~2.7 will double the odds of the mental_cat 
@@ -284,15 +288,66 @@ di "$leftover_cat_expanded"
 * ---------- 
 sw, pr(0.1): logit mental_cat region01 (i.insu) (i.religion01) (i._v3) (i.well_cat) log_cov_psych cov_contact (ib3._v1) $leftover_cat_expanded $leftover_cont, nolog or 
 
-* --- prelim final model
-logit mental_cat region01 i.insu ib7.religion01 _v3 well_cat log_cov_psych cov_contact ib3._v1, nolog or 
+* --- combining categories 
+test 4.insu = 10.insu
+gen insu_full = 0
+replace insu_full = 1 if insu == 2
+replace insu_full = 2 if insu == 4 | insu == 10
+label variable insu_full "Combined insurances" 
+label define insu_fullf 0 "no insurance" 1 "Partial" 2 "Full Public/Private"
+label values insu_full insu_fullf 
 
-* --  potential effect modifiers 
+
+* --- prelim final model
+logit mental_cat region01 i.insu_full ib7.religion01 _v3 well_cat log_cov_psych cov_contact ib3._v1, nolog or 
+
+* ------------ INTERACTIONS --------- 
+// no interactions were found 
 global potential_interactions "sex01 c.ageyears race01"
 
 foreach i in $potential_interactions {
 	logit mental_cat c.region01##`i' insu##`i' ib7.religion01##`i' c._v3##`i' c.well_cat##`i' c.log_cov_psych##`i' c.cov_contact##`i' ib3._v1##`i', nolog or 
 }
+
+logit mental_cat region01 i.insu_full ib7.religion01 _v3 well_cat log_cov_psych cov_contact ib3._v1, nolog or 
+
+* ------------ CONFOUNDERS -----------
+
+// Define a macro for potential confounders
+global confounders "ageyears sex01 i.race "
+
+// Loop through each main independent variable and each potential confounder
+foreach main in region01 _v3 well_cat log_cov_psych cov_contact {
+    foreach conf in $confounders {
+        di "Testing for confounding effect of `conf' on `main'..."
+
+        // Run the logistic regression model without the confounder
+        logit mental_cat `main'
+        // Store the coefficient for the main variable
+        scalar b1 = _b[`main']
+
+        // Run the logistic regression model with the confounder
+        logit mental_cat `main' `conf'
+        // Store the coefficient for the main variable
+        scalar b2 = _b[`main']
+
+        // Calculate the percentage change in the coefficient
+        scalar perc_change = 100 * (b2 - b1) / b1
+        di "Percent change in coefficient for `main' when including `conf': " float(perc_change) "%"
+    }
+}
+
+
+// Loop through each main independent variable and each potential confounder
+foreach main in insu_full religion01 _v1 
+
+foreach conf in $confounders {
+		
+}
+
+
+
+
 
 
 
