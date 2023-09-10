@@ -95,11 +95,11 @@ codebook wellbeing
 //hist wellbeing, frequency normal title("Distribution of wellbeing")
 signrank cov_wellbeing=wellbeing 
 *make categories
-gen well_cat = 0 if cov_wellbeing >= 17.5
-replace well_cat = 1 if cov_wellbeing < 17.5 
+gen well_cat = 0 if cov_wellbeing < 17.5
+replace well_cat = 1 if cov_wellbeing >= 17.5 
 *now we want to create labels
 label variable well_cat "wellbeing Categories" 
-label define well_catf 0 "poor" 1 "good" 
+label define well_catf 0 "good" 1 "poor" 
 label values well_cat well_catf 
 drop a211 a212 a213 a214 a215 wellbeing wellbeing01 cov_wellbeing
 
@@ -266,12 +266,8 @@ foreach var in $cat_prelim {
 }
 di "$cat_prelim_expanded"
 
-* prelimiary model 
-logit mental_cat $cat_prelim_expanded $cont_prelim, nolog 
-logit mental_cat $cat_prelim $cont_prelim, nolog 
-
 * stepwise models 
-stepwise, pr(0.1): logit mental_cat $cat_prelim_expanded $cont_prelim, nolog or
+stepwise, pr(0.1): logit mental_cat $cat_prelim_expanded $cont_prelim , nolog or
 stepwise, pe(0.05): logit mental_cat $cat_prelim_expanded $cont_prelim, nolog or
 stepwise, pr(0.1) pe(0.05): logit mental_cat $cat_prelim_expanded $cont_prelim, nolog or
 
@@ -286,15 +282,30 @@ foreach var in $leftover_cat {
 di "$leftover_cat_expanded"
 
 * ---------- 
-sw, pr(0.1): logit mental_cat region01 i.insu i.religion01 i._v3 well_cat log_cov_psych cov_contact ib3._v1 $leftover_cat $leftover_cont, nolog or 
+sw, pr(0.1): logit mental_cat region01 (i.insu) (i.religion01) (i._v3) (i.well_cat) log_cov_psych cov_contact (ib3._v1) $leftover_cat_expanded $leftover_cont, nolog or 
 
 * --- prelim final model
-logit mental_cat region01 i.insu i.religion01 i._v3 well_cat log_cov_psych cov_contact ib3._v1, nolog or 
+logit mental_cat region01 i.insu ib7.religion01 _v3 well_cat log_cov_psych cov_contact ib3._v1, nolog or 
 
 * --  potential effect modifiers 
-global "sex01 ageyears race01"
+global potential_interactions "sex01 c.ageyears race01"
 
-foreach i in $
+foreach i in $potential_interactions {
+	logit mental_cat c.region01##`i' insu##`i' ib7.religion01##`i' c._v3##`i' c.well_cat##`i' c.log_cov_psych##`i' c.cov_contact##`i' ib3._v1##`i', nolog or 
+}
+
+
+
+estat gof, group(8) table
+
+estat classification
+lroc 
+lsens
+predict p
+cutpt mental_cat p
+estat clas 
+estat clas, cut(.10650739)
+
 
 
 
