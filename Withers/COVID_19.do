@@ -427,7 +427,7 @@ scatter delta_beta p
 list mental_cat p delta_beta if delta_beta > 2 & delta_beta != .
 twoway scatter delta_x2 p [aweight = delta_beta], msymbol(circle_hollow)
 
-* --------------- DROPPING PROBLEMATIC OBSERVATIONS 
+* --------------- DROPPING PROBLEMATIC OBSERVATIONS - SENSITIVITY ANALYSIS 
 drop if delta_x2 > 10 & delta_x2 != .
 logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race, nolog or 
 estat gof, group(6) table
