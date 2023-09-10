@@ -315,93 +315,95 @@ logit mental_cat region01 i.insu_full ib7.religion01 _v3 well_cat log_cov_psych 
 * ------------ CONFOUNDERS -----------
 
 // Define a macro for potential confounders
-*global potential_confounders "ageyears sex01 i.race "
-*global confounders_cont ""
+global potential_confounders "ageyears sex01 race "
+global confounders_cont ""
 
 // Loop through each main independent variable and each potential confounder
-*foreach main in region01 _v3 well_cat log_cov_psych cov_contact {
-*    foreach conf in $potential_confounders {
-*        di "Testing for confounding effect of `conf' on `main'..."
-*
+foreach main in region01 _v3 well_cat log_cov_psych cov_contact {
+    foreach conf in $potential_confounders {
+        di "Testing for confounding effect of `conf' on `main'..."
+
         // Run the logistic regression model without the confounder
-*        logit mental_cat `main'
+        logit mental_cat `main'
         // Store the coefficient for the main variable
-*        scalar b1 = _b[`main']
+        scalar b1 = _b[`main']
 
         // Run the logistic regression model with the confounder
-*        logit mental_cat `main' `conf'
+        logit mental_cat `main' `conf'
         // Store the coefficient for the main variable
-*        scalar b2 = _b[`main']
+        scalar b2 = _b[`main']
 
         // Calculate the percentage change in the coefficient
-*        scalar perc_change = 100 * (b2 - b1) / b1
-*        di "Percent change in coefficient for `main' when including `conf': " float(perc_change) "%"
-*		if (abs(perc_change) > 10){
-*			global confounders_cont "$confounders_cont `conf'"
-*		}
-*    }
-*}
-*di "$confounders_cont"
+        scalar perc_change = 100 * (b2 - b1) / b1
+        di "Percent change in coefficient for `main' when including `conf': " float(perc_change) "%"
+		if (abs(perc_change) > 10){
+			global confounders_cont "$confounders_cont `conf'"
+		}
+    }
+}
+di "$confounders_cont"
 // confounders = race/_v3 (13%), race/well_cat (11.4%), race/log_cov_psych (9.8%), race/cov_contact (58%)
 
 
 // Loop through each main independent variable and each potential confounder
 	
-*foreach conf in $potential_confounders {
-*	logit mental_cat i.insu_full
-*	scalar b1 = _b[1.insu_full]
-*	scalar b2 = _b[2.insu_full]
-*	
-*	logit mental_cat i.insu_full `conf'
-*	scalar b11 = _b[1.insu_full]
-*	scalar b22 = _b[2.insu_full]
-*	
-*	scalar perc_change1 = 100 * (b1 - b11) / b1 
-*	scalar perc_change2 = 100 * (b2 - b22) / b2
-*	di "Percent change in coefficient for Partial: " float(perc_change1) "%"
-*	di "Percent change in coefficient for Full: " float(perc_change2) "%"
-*}
+foreach conf in $potential_confounders {
+	logit mental_cat i.insu_full
+	scalar b1 = _b[1.insu_full]
+	scalar b2 = _b[2.insu_full]
+	
+	logit mental_cat i.insu_full `conf'
+	scalar b11 = _b[1.insu_full]
+	scalar b22 = _b[2.insu_full]
+	
+	scalar perc_change1 = 100 * (b1 - b11) / b1 
+	scalar perc_change2 = 100 * (b2 - b22) / b2
+	di "Percent change in coefficient for Partial: " float(perc_change1) "%"
+	di "Percent change in coefficient for Full: " float(perc_change2) "%"
+}
 // counfounders = ageyears (17%, 18.5%), race (170%, 1.1%)
 
-*foreach conf in $potential_confounders {
-*	logit mental_cat ib7.religion01
-*	scalar b1 = _b[1.religion01]
-*	scalar b2 = _b[2.religion01]
-*	scalar b8 = _b[8.religion01]
-*	
-*	logit mental_cat ib7.religion01 `conf'
-*	scalar b11 = _b[1.religion01]
-*	scalar b22 = _b[2.religion01]
-*	scalar b88 = _b[8.religion01]
+foreach conf in $potential_confounders {
+	logit mental_cat ib7.religion01, nolog or
+	scalar b1 = _b[1.religion01]
+	scalar b2 = _b[2.religion01]
+	scalar b8 = _b[8.religion01]
 	
-*	scalar perc_change1 = 100 * (b1 - b11) / b1 
-*	scalar perc_change2 = 100 * (b2 - b22) / b2
-*	scalar perc_change8 = 100 * (b8 - b88) / b8
-*	di "Percent change in coefficient for Christian/Catholic: " float(perc_change1) "%"
-*	di "Percent change in coefficient for Buddhist: " float(perc_change2) "%"
-*	di "Percent change in coefficient for Other: " float(perc_change8) "%"
-*}
+	logit mental_cat ib7.religion01 `conf', nolog or
+	scalar b11 = _b[1.religion01]
+	scalar b22 = _b[2.religion01]
+	scalar b88 = _b[8.religion01]
+
+	scalar perc_change1 = 100 * (b1 - b11) / b1 
+	scalar perc_change2 = 100 * (b2 - b22) / b2
+	scalar perc_change8 = 100 * (b8 - b88) / b8
+	di "Percent change in coefficient for Christian/Catholic: " float(perc_change1) "%"
+	di "Percent change in coefficient for Buddhist: " float(perc_change2) "%"
+	di "Percent change in coefficient for Other: " float(perc_change8) "%"
+}
 // counfounders = ageyears (7%, 41%, 6%), race (113%, 141%, 62%)
 
-*foreach conf in $potential_confounders {
-*	logit mental_cat ib3._v1
-*	scalar b1 = _b[1._v1]
-*	scalar b2 = _b[2._v1]
+foreach conf in $potential_confounders {
+	logit mental_cat ib3._v1
+	scalar b1 = _b[1._v1]
+	scalar b2 = _b[2._v1]
 	
-*	logit mental_cat ib3._v1 `conf'
-*	scalar b11 = _b[1._v1]
-*	scalar b22 = _b[2._v1]
-*	
-*	scalar perc_change1 = 100 * (b1 - b11) / b1 
-*	scalar perc_change2 = 100 * (b2 - b22) / b2
-*	di "Percent change in coefficient for Improved: " float(perc_change1) "%"
-*	di "Percent change in coefficient for Worse: " float(perc_change2) "%"
-*}
+	logit mental_cat ib3._v1 `conf'
+	scalar b11 = _b[1._v1]
+	scalar b22 = _b[2._v1]
+	
+	scalar perc_change1 = 100 * (b1 - b11) / b1 
+	scalar perc_change2 = 100 * (b2 - b22) / b2
+	di "Percent change in coefficient for Improved: " float(perc_change1) "%"
+	di "Percent change in coefficient for Worse: " float(perc_change2) "%"
+}
 // counfounders = race (75%, 15%)
 
 
 * ------------------ FINAL MENTAL MODEL --------------------
 logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race, nolog or 
+
+logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 race, nolog or 
 
 * ----------------- Model diagnostics ----------------------
 
@@ -429,7 +431,7 @@ twoway scatter delta_x2 p [aweight = delta_beta], msymbol(circle_hollow)
 
 * --------------- DROPPING PROBLEMATIC OBSERVATIONS - SENSITIVITY ANALYSIS 
 drop if delta_x2 > 10 & delta_x2 != .
-logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race, nolog or 
+logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 race, nolog or 
 estat gof, group(6) table
 
 drop p delta_x2 delta_dev delta_beta 
@@ -457,6 +459,7 @@ twoway scatter delta_x2 p [aweight = delta_beta], msymbol(circle_hollow)
 * ---------------- Predictions ---------------------------
 
 logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race, nolog or 
+
 
 estat classification
 lroc 
