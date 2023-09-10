@@ -335,13 +335,13 @@ foreach main in region01 _v3 well_cat log_cov_psych cov_contact {
         // Calculate the percentage change in the coefficient
         scalar perc_change = 100 * (b2 - b1) / b1
         di "Percent change in coefficient for `main' when including `conf': " float(perc_change) "%"
-		if (perc_change > 10){
+		if (abs(perc_change) > 10){
 			global confounders_cont "$confounders_cont `conf'"
 		}
     }
 }
 di "$confounders_cont"
-// confounders = 
+// confounders = race/_v3 (13%), race/well_cat (11.4%), race/log_cov_psych (9.8%), race/cov_contact (58%)
 
 
 // Loop through each main independent variable and each potential confounder
