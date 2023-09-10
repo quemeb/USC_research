@@ -156,39 +156,39 @@ vl drop (res_cat)   // another outcome
 
 * height_cm - linear 
 //lowess mental_cat height_cm, logit 
-fp <height_cm>, scale center replace: logit mental_cat <height_cm>
+//fp <height_cm>, scale center replace: logit mental_cat <height_cm>
 
 * weight_kg - linear 
 //lowess mental_cat weight_kg, logit
-fp <weight_kg>, scale center replace: logit mental_cat <weight_kg>
+//fp <weight_kg>, scale center replace: logit mental_cat <weight_kg>
 
 * ageyears - linear 
 //lowess mental_cat ageyears, logit 
-fp <ageyears>, scale center replace: logit mental_cat <ageyears>
+//fp <ageyears>, scale center replace: logit mental_cat <ageyears>
 
 * cov_effect - linear 
 //lowess mental_cat cov_effect, logit 
-fp <cov_effect>, scale center replace: logit mental_cat <cov_effect>
+//fp <cov_effect>, scale center replace: logit mental_cat <cov_effect>
 
 * cov_fear - log 
 //lowess mental_cat cov_fear, logit 
-fp <cov_fear>, scale center replace: logit mental_cat <cov_fear>
+//fp <cov_fear>, scale center replace: logit mental_cat <cov_fear>
 gen log_cov_fear = log(cov_fear)
 //lowess mental_cat log_cov_fear, logit 
-fp <log_cov_fear>, scale center replace: logit mental_cat <log_cov_fear>
+//fp <log_cov_fear>, scale center replace: logit mental_cat <log_cov_fear>
 drop cov_fear 
 
 * cov_psych - log
 //lowess mental_cat cov_psych, logit 
-fp <cov_psych>, scale center replace: logit mental_cat <cov_psych>
+//fp <cov_psych>, scale center replace: logit mental_cat <cov_psych>
 gen log_cov_psych = log(cov_psych)
 //lowess mental_cat log_cov_psych, logit 
-fp <log_cov_psych>, scale center replace: logit mental_cat <log_cov_psych>
+//fp <log_cov_psych>, scale center replace: logit mental_cat <log_cov_psych>
 drop cov_psych 
 
 * cov_burden - linear 
 //lowess mental_cat cov_burden, logit 
-fp <cov_burden>, scale center replace: logit mental_cat <cov_burden>
+//fp <cov_burden>, scale center replace: logit mental_cat <cov_burden>
 
 vl rebuild 
 
