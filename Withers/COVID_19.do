@@ -314,11 +314,12 @@ logit mental_cat region01 i.insu_full ib7.religion01 _v3 well_cat log_cov_psych 
 * ------------ CONFOUNDERS -----------
 
 // Define a macro for potential confounders
-global confounders "ageyears sex01 i.race "
+global potential_confounders "ageyears sex01 i.race "
+global confounders_cont ""
 
 // Loop through each main independent variable and each potential confounder
 foreach main in region01 _v3 well_cat log_cov_psych cov_contact {
-    foreach conf in $confounders {
+    foreach conf in $potential_confounders {
         di "Testing for confounding effect of `conf' on `main'..."
 
         // Run the logistic regression model without the confounder
@@ -334,18 +335,69 @@ foreach main in region01 _v3 well_cat log_cov_psych cov_contact {
         // Calculate the percentage change in the coefficient
         scalar perc_change = 100 * (b2 - b1) / b1
         di "Percent change in coefficient for `main' when including `conf': " float(perc_change) "%"
+		if (perc_change > 10){
+			global confounders_cont "$confounders_cont `conf'"
+		}
     }
 }
+di "$confounders_cont"
+// confounders = 
 
 
 // Loop through each main independent variable and each potential confounder
-foreach main in insu_full religion01 _v1 
-
-foreach conf in $confounders {
-		
+foreach main in insu_full religion01 _v1 {
+	
+foreach conf in $potential_confounders {
+	logit mental_cat i.insu_full
+	scalar b1 = _b[1.insu_full]
+	scalar b2 = _b[2.insu_full]
+	
+	logit mental_cat i.insu_full `conf'
+	scalar b11 = _b[1.insu_full]
+	scalar b22 = _b[2.insu_full]
+	
+	scalar perc_change1 = 100 * (b1 - b11) / b1 
+	scalar perc_change2 = 100 * (b2 - b22) / b2
+	di "Percent change in coefficient for Partial: " float(perc_change1) "%"
+	di "Percent change in coefficient for Full: " float(perc_change2) "%"
 }
+// counfounders = ageyears (17%, 18.5%), race (170%, 1.1%)
 
+foreach conf in $potential_confounders {
+	logit mental_cat ib7.religion01
+	scalar b1 = _b[1.religion01]
+	scalar b2 = _b[2.religion01]
+	scalar b8 = _b[8.religion01]
+	
+	logit mental_cat ib7.religion01 `conf'
+	scalar b11 = _b[1.religion01]
+	scalar b22 = _b[2.religion01]
+	scalar b88 = _b[8.religion01]
+	
+	scalar perc_change1 = 100 * (b1 - b11) / b1 
+	scalar perc_change2 = 100 * (b2 - b22) / b2
+	scalar perc_change8 = 100 * (b8 - b88) / b8
+	di "Percent change in coefficient for Christian/Catholic: " float(perc_change1) "%"
+	di "Percent change in coefficient for Buddhist: " float(perc_change2) "%"
+	di "Percent change in coefficient for Other: " float(perc_change8) "%"
+}
+// counfounders = ageyears (7%, 41%, 6%), race (113%, 141%, 62%)
 
+foreach conf in $potential_confounders {
+	logit mental_cat ib3._v1
+	scalar b1 = _b[1._v1]
+	scalar b2 = _b[2._v1]
+	
+	logit mental_cat ib3._v1 `conf'
+	scalar b11 = _b[1._v1]
+	scalar b22 = _b[2._v1]
+	
+	scalar perc_change1 = 100 * (b1 - b11) / b1 
+	scalar perc_change2 = 100 * (b2 - b22) / b2
+	di "Percent change in coefficient for Improved: " float(perc_change1) "%"
+	di "Percent change in coefficient for Worse: " float(perc_change2) "%"
+}
+// counfounders = race (75%, 15%)
 
 
 
