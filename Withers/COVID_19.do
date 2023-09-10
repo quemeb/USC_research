@@ -4,7 +4,7 @@
 **----------- = new section ------------------
 
 * Importing dataset
-import spss using "C:\Users\bryan\Desktop\EXPLORING MENTAL HEALTH AND RESILIENCY.sav"
+import spss using "https://github.com/quemeb/USC_research/raw/main/Withers/EXPLORING%20MENTAL%20HEALTH%20AND%20RESILIENCY.sav"
 
 **#------------------------------- DATA CLEANING ---------------------------------
 * Dropping made up dicho variables
@@ -286,8 +286,8 @@ foreach var in $leftover_cat {
 }
 di "$leftover_cat_expanded"
 
-* ---------- 
-sw, pr(0.1): logit mental_cat region01 (i.insu) (i.religion01) (i._v3) (i.well_cat) log_cov_psych cov_contact (ib3._v1) $leftover_cat_expanded $leftover_cont, nolog or 
+* ---------- Final stepwise 
+sw, pr(0.1): logit mental_cat region01 (i.insu) (ib7.religion01) (ib3._v3) (i.well_cat) log_cov_psych cov_contact (ib3._v1) $leftover_cat_expanded $leftover_cont, nolog or 
 
 * --- combining categories 
 test 4.insu = 10.insu
@@ -304,11 +304,13 @@ logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_
 
 * ------------ INTERACTIONS --------- 
 // no interactions were found 
-*global potential_interactions "sex01 c.ageyears race01"
+global potential_interactions "sex01 c.ageyears race01"
 
-*foreach i in $potential_interactions {
-*	logit mental_cat c.region01##`i' insu##`i' ib7.religion01##`i' c._v3##`i' c.well_cat##`i' c.log_cov_psych##`i' c.cov_contact##`i' ib3._v1##`i', nolog or 
-*}
+foreach i in $potential_interactions {
+	logit mental_cat c.region01##`i' insu_full##`i' ib7.religion01##`i' c._v3##`i' c.well_cat##`i' c.log_cov_psych##`i' c.cov_contact##`i' ib3._v1##`i', nolog or 
+}
+
+/// lrtest for sex01##religion01 and race01##_v1 
 
 logit mental_cat region01 i.insu_full ib7.religion01 _v3 well_cat log_cov_psych cov_contact ib3._v1, nolog or 
 
