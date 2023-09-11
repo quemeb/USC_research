@@ -311,6 +311,12 @@ foreach i in $potential_interactions {
 }
 
 /// lrtest for sex01##religion01 and race01##_v1 
+logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 sex01, nolog or 
+estimates store A
+logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01##sex01, nolog or
+lrtest A 
+
+
 
 logit mental_cat region01 i.insu_full ib7.religion01 _v3 well_cat log_cov_psych cov_contact ib3._v1, nolog or 
 
