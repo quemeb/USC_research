@@ -304,7 +304,7 @@ logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_
 
 * ------------ INTERACTIONS --------- 
 // no interactions were found 
-global potential_interactions "sex01 c.ageyears race01"
+global potential_interactions "c.sex01 c.ageyears race01"
 
 foreach i in $potential_interactions {
 	logit mental_cat c.region01##`i' insu_full##`i' ib7.religion01##`i' c._v3##`i' c.well_cat##`i' c.log_cov_psych##`i' c.cov_contact##`i' ib3._v1##`i', nolog or 
@@ -315,6 +315,12 @@ logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_
 estimates store A
 logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01##sex01, nolog or
 lrtest A 
+// race01##_v1 
+logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race01, nolog or 
+estimates store A
+logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1##race i.insu_full ib7.religion01, nolog or
+lrtest A
+
 
 
 
