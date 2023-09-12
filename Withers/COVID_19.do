@@ -272,7 +272,7 @@ foreach var in $cat_prelim {
 }
 di "$cat_prelim_expanded"
 
-* stepwise models 
+* prelim - stepwise models 
 stepwise, pr(0.05): logit mental_cat $cat_prelim_expanded $cont_prelim , nolog or
 stepwise, pr(0.1): logit mental_cat $cat_prelim_expanded $cont_prelim , nolog or
 
@@ -288,6 +288,7 @@ di "$leftover_cat_expanded"
 
 * ---------- Final stepwise 
 sw, pr(0.1): logit mental_cat region01 (i.insu) (ib7.religion01) (ib3._v3) (i.well_cat) log_cov_psych cov_contact (ib3._v1) $leftover_cat_expanded $leftover_cont, nolog or 
+
 
 * --- combining categories 
 test 4.insu = 10.insu
