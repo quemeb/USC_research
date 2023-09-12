@@ -288,7 +288,10 @@ di "$leftover_cat_expanded"
 
 * ---------- Final stepwise 
 sw, pr(0.1): logit mental_cat region01 (i.insu) (ib7.religion01) (ib3._v3) (i.well_cat) log_cov_psych cov_contact (ib3._v1) $leftover_cat_expanded $leftover_cont, nolog or 
+// no lefovers came back significant 
 
+* ---------- Preliminary model after stepwises 
+logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu ib7.religion01, nolog or 
 
 * --- combining categories 
 test 4.insu = 10.insu
@@ -303,128 +306,128 @@ label values insu_full insu_fullf
 * --- prelim final model
 logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01, nolog or 
 
-* ------------ INTERACTIONS --------- 
+*# _______________________ INTERACTIONS ___________________________ 
 // no interactions were found 
-global potential_interactions "c.sex01 c.ageyears race01"
+*global potential_interactions "c.sex01 c.ageyears race01"
 
-foreach i in $potential_interactions {
-	logit mental_cat c.region01##`i' insu_full##`i' ib7.religion01##`i' c._v3##`i' c.well_cat##`i' c.log_cov_psych##`i' c.cov_contact##`i' ib3._v1##`i', nolog or 
-}
+*foreach i in $potential_interactions {
+*	logit mental_cat c.region01##`i' insu_full##`i' ib7.religion01##`i' c._v3##`i' c.well_cat##`i' c.log_cov_psych##`i' c.cov_contact##`i' ib3._v1##`i', nolog or 
+*}
 
 /// lrtest for sex01##religion01 and race01##_v1 
-logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 sex01, nolog or 
-estimates store A
-logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01##sex01, nolog or
-lrtest A 
+*logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 sex01, nolog or 
+*estimates store A
+*logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01##sex01, nolog or
+*lrtest A 
 // race01##_v1 
-logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race01, nolog or 
-estimates store A
-logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1##race i.insu_full ib7.religion01, nolog or
-lrtest A
+*logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race01, nolog or 
+*estimates store A
+*logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1##race i.insu_full ib7.religion01, nolog or
+*lrtest A
 
 
-
-
+* --------- Model after interactions 
 logit mental_cat region01 i.insu_full ib7.religion01 _v3 well_cat log_cov_psych cov_contact ib3._v1, nolog or 
 
-* ------------ CONFOUNDERS -----------
+*# ______________ CONFOUNDERS ____________________
 
 // Define a macro for potential confounders
-global potential_confounders "ageyears sex01 race "
-global confounders_cont ""
+*global potential_confounders "ageyears sex01 i.race "
+*global confounders_cont ""
 
 // Loop through each main independent variable and each potential confounder
-foreach main in region01 _v3 well_cat log_cov_psych cov_contact {
-    foreach conf in $potential_confounders {
-        di "Testing for confounding effect of `conf' on `main'..."
+*foreach main in region01 _v3 well_cat log_cov_psych cov_contact {
+*    foreach conf in $potential_confounders {
+*        di "Testing for confounding effect of `conf' on `main'..."
 
         // Run the logistic regression model without the confounder
-        logit mental_cat `main'
+*        logit mental_cat `main'
         // Store the coefficient for the main variable
-        scalar b1 = _b[`main']
+*        scalar b1 = _b[`main']
 
         // Run the logistic regression model with the confounder
-        logit mental_cat `main' `conf'
+*        logit mental_cat `main' `conf'
         // Store the coefficient for the main variable
-        scalar b2 = _b[`main']
+*        scalar b2 = _b[`main']
 
         // Calculate the percentage change in the coefficient
-        scalar perc_change = 100 * (b2 - b1) / b1
-        di "Percent change in coefficient for `main' when including `conf': " float(perc_change) "%"
-		if (abs(perc_change) > 10){
-			global confounders_cont "$confounders_cont `conf'"
-		}
-    }
-}
-di "$confounders_cont"
+*       scalar perc_change = 100 * (b2 - b1) / b1
+*         di "Percent change in coefficient for `main' when including `conf': " float(perc_change) "%"
+*		if (abs(perc_change) > 10){
+*			global confounders_cont "$confounders_cont `conf'"
+*		}
+*    }
+*}
+*di "$confounders_cont"
 // confounders = race/_v3 (13%), race/well_cat (11.4%), race/log_cov_psych (9.8%), race/cov_contact (58%)
 
 
 // Loop through each main independent variable and each potential confounder
 	
-foreach conf in $potential_confounders {
-	logit mental_cat i.insu_full
-	scalar b1 = _b[1.insu_full]
-	scalar b2 = _b[2.insu_full]
+*foreach conf in $potential_confounders {
+*	logit mental_cat i.insu_full
+*	scalar b1 = _b[1.insu_full]
+*	scalar b2 = _b[2.insu_full]
+*	
+*	logit mental_cat i.insu_full `conf'
+*	scalar b11 = _b[1.insu_full]
+*	scalar b22 = _b[2.insu_full]
 	
-	logit mental_cat i.insu_full `conf'
-	scalar b11 = _b[1.insu_full]
-	scalar b22 = _b[2.insu_full]
-	
-	scalar perc_change1 = 100 * (b1 - b11) / b1 
-	scalar perc_change2 = 100 * (b2 - b22) / b2
-	di "Percent change in coefficient for Partial: " float(perc_change1) "%"
-	di "Percent change in coefficient for Full: " float(perc_change2) "%"
-}
+*	scalar perc_change1 = 100 * (b1 - b11) / b1 
+*	scalar perc_change2 = 100 * (b2 - b22) / b2
+*	di "Percent change in coefficient for Partial: " float(perc_change1) "%"
+*	di "Percent change in coefficient for Full: " float(perc_change2) "%"
+*}
 // counfounders = ageyears (17%, 18.5%), race (170%, 1.1%)
 
-foreach conf in $potential_confounders {
-	logit mental_cat ib7.religion01, nolog or
-	scalar b1 = _b[1.religion01]
-	scalar b2 = _b[2.religion01]
-	scalar b8 = _b[8.religion01]
+*foreach conf in $potential_confounders {
+*	logit mental_cat ib7.religion01, nolog or
+*	scalar b1 = _b[1.religion01]
+*	scalar b2 = _b[2.religion01]
+*	scalar b8 = _b[8.religion01]
 	
-	logit mental_cat ib7.religion01 `conf', nolog or
-	scalar b11 = _b[1.religion01]
-	scalar b22 = _b[2.religion01]
-	scalar b88 = _b[8.religion01]
-
-	scalar perc_change1 = 100 * (b1 - b11) / b1 
-	scalar perc_change2 = 100 * (b2 - b22) / b2
-	scalar perc_change8 = 100 * (b8 - b88) / b8
-	di "Percent change in coefficient for Christian/Catholic: " float(perc_change1) "%"
-	di "Percent change in coefficient for Buddhist: " float(perc_change2) "%"
-	di "Percent change in coefficient for Other: " float(perc_change8) "%"
-}
+*	logit mental_cat ib7.religion01 `conf', nolog or
+*	scalar b11 = _b[1.religion01]
+*	scalar b22 = _b[2.religion01]
+*	scalar b88 = _b[8.religion01]
+*
+*	scalar perc_change1 = 100 * (b1 - b11) / b1 
+*	scalar perc_change2 = 100 * (b2 - b22) / b2
+*	scalar perc_change8 = 100 * (b8 - b88) / b8
+*	di "Percent change in coefficient for Christian/Catholic: " float(perc_change1) "%"
+*	di "Percent change in coefficient for Buddhist: " float(perc_change2) "%"
+*	di "Percent change in coefficient for Other: " float(perc_change8) "%"
+*}
 // counfounders = ageyears (7%, 41%, 6%), race (113%, 141%, 62%)
 
-foreach conf in $potential_confounders {
-	logit mental_cat ib3._v1
-	scalar b1 = _b[1._v1]
-	scalar b2 = _b[2._v1]
+*foreach conf in $potential_confounders {
+*	logit mental_cat ib3._v1
+*	scalar b1 = _b[1._v1]
+*	scalar b2 = _b[2._v1]
 	
-	logit mental_cat ib3._v1 `conf'
-	scalar b11 = _b[1._v1]
-	scalar b22 = _b[2._v1]
+*	logit mental_cat ib3._v1 `conf'
+*	scalar b11 = _b[1._v1]
+*	scalar b22 = _b[2._v1]
 	
-	scalar perc_change1 = 100 * (b1 - b11) / b1 
-	scalar perc_change2 = 100 * (b2 - b22) / b2
-	di "Percent change in coefficient for Improved: " float(perc_change1) "%"
-	di "Percent change in coefficient for Worse: " float(perc_change2) "%"
-}
+*	scalar perc_change1 = 100 * (b1 - b11) / b1 
+*	scalar perc_change2 = 100 * (b2 - b22) / b2
+*	di "Percent change in coefficient for Improved: " float(perc_change1) "%"
+*	di "Percent change in coefficient for Worse: " float(perc_change2) "%"
+*}
 // counfounders = race (75%, 15%)
 
 
 * ------------------ FINAL MENTAL MODEL --------------------
 logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race, nolog or 
 
-logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 race, nolog or 
 
 * ----------------- Model diagnostics ----------------------
 
-estat gof, group(10) table // doesn't depart from goodness
+estat gof, group(10) table 
+// doesn't depart from goodness
 
 collin region01 _v3 well_cat log_cov_psych cov_contact
+// no collinearity 
 
 predict predicted, p
 predict delta_x2, dx2
@@ -433,11 +436,11 @@ predict delta_beta, dbeta
 
 // change in Pearson GOF
 scatter delta_x2 p
-list mental_cat region01 _v3 well_cat log_cov_psych cov_contact _v1 insu_full religion01 p delta_x2 if delta_x2 > 15 & delta_x2 != .
+list mental_cat region01 _v3 well_cat log_cov_psych cov_contact _v1 insu_full religion01 p delta_x2 if delta_x2 > 10 & delta_x2 != .
 
 // change in Deviance GOF
 scatter delta_dev p 
-list mental_cat p delta_dev if delta_dev > 4 & delta_dev != .
+list mental_cat p delta_dev if delta_dev > 6 & delta_dev != .
 
 // change in cooks distance 
 scatter delta_beta p 
@@ -445,9 +448,9 @@ list mental_cat p delta_beta if delta_beta > 2 & delta_beta != .
 twoway scatter delta_x2 p [aweight = delta_beta], msymbol(circle_hollow)
 
 * --------------- DROPPING PROBLEMATIC OBSERVATIONS - SENSITIVITY ANALYSIS 
-drop if delta_x2 > 10 & delta_x2 != .
-logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 race, nolog or 
-estat gof, group(6) table
+drop if delta_x2 > 4 & delta_x2 != .
+logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race, nolog or 
+estat gof, group(4) table
 
 drop p delta_x2 delta_dev delta_beta 
 
@@ -470,7 +473,7 @@ list mental_cat p delta_beta if delta_beta > 2 & delta_beta != .
 twoway scatter delta_x2 p [aweight = delta_beta], msymbol(circle_hollow)
 
 
-
+// NOT RELEVANT SINCE WE DID A INFERENCE MODEL PREVIOUSLY, just for fun lol 
 * ---------------- Predictions ---------------------------
 
 logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race, nolog or 
@@ -483,14 +486,17 @@ predict p
 cutpt mental_cat p
 
 logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race, nolog or 
-estat clas, cut(.13073958)
+estat clas, cut(.13861314)
 
 
 
 
 
+******************************* RESILIENCE MODEL 
 
+*find cat and cont prelim
 
+*find leftovers 
 
 stepwise, pr(0.1): mlogit res_cat $cat_prelim_expanded $cont_prelim, nolog rrr
 
