@@ -166,18 +166,20 @@ def create_summary_file(chr, size, all_agree, two_agree, AN_agree_2, SN_agree_2,
 #create_summary_file(chr, size, all_agree, two_agree, AN_agree_2, SN_agree_2, VP_agree_2, one_agree, AN_agree_1, SN_agree_1, VP_agree_1, filename_1)
 
 
-def annotation_single_to_master(unique_clean, target, source, size):
-    # Parsing through dataset
-    for i in range(size):
-        zize = len(unique_clean[i])  # number of Gene IDs
+def annotation_single_to_master(target, source):
+    temp = []
     
-        # Helper function to check presence
-        def check_presence(target, source):
-            if zize == 1:
-                return [zize] if target in source else []
-            elif zize > 1:
-                return [x + 1 for x in range(zize) if target[x] in source]
-    
+    # Loop through the entire source list
+    for i in range(len(source)):
+        zize = len(source[i])  # Number of Gene IDs in the current source element
+
+        # Check for matches and append to temp accordingly
+        if zize == 1:
+            temp.append([zize] if source[i] in target else [])
+        elif zize > 1:
+            temp.append([x + 1 for x in range(zize) if source[i][x] in target])
+            
+    return temp
 
 
 def main():
@@ -190,7 +192,6 @@ def main():
     AN_ID_genic = cdata["ANNOVAR_ensembl_Gene_ID"]  #Gene ID should be here
     AN_ID_intergenic = cdata["ANNOVAR_ensembl_Closest_gene(intergenic_only)"]    #alternative place for Gene ID
     AN_ID_tog = [AN_ID_intergenic[i] if gene_id == "." else gene_id for i, gene_id in enumerate(AN_ID_genic)]
-    
     AN_ID_genic = [gene_id for gene_id in AN_ID_genic if gene_id != '.']
     AN_ID_intergenic = [gene_id for gene_id in AN_ID_intergenic if not gene_id.startswith('.')]
 
@@ -237,7 +238,8 @@ def main():
     size_inter = len(AN_ID_inter)
     size_genic = len(AN_ID_genic)
     
-    """ Comparing tools to 'master' annotiation  """
+    
+    """ ---------------  Comparing tools to 'master' annotiation  ------------------"""
     
     # Merging all Gene IDs
     united_inter = [np.concatenate((AN_ID_inter[i], SN_ID_inter[i], VP_ID_inter[i]), axis=None) for i in range(size_inter)]
@@ -245,8 +247,8 @@ def main():
     
     
     # Getting rid of repeats for each SNP
-    unique_inter_clean = no_repeats(united_inter)
-    unique_genic_clean = no_repeats(united_genic)
+    united_unique_inter = no_repeats(united_inter)
+    united_unique_genic = no_repeats(united_genic)
     
     AN_ID_inter_check = []
     AN_ID_genic_check = []
@@ -255,23 +257,11 @@ def main():
     VP_ID_inter_check = []
     VP_ID_genic_check = []
     
+    AN_ID_inter_check = annotation_single_to_master(AN_ID_inter, united_unique_inter)
+    SN_ID_inter_check = annotation_single_to_master(SN_ID_inter, united_unique_inter)
+    VP_ID_inter_check = annotation_single_to_master(VP_ID_inter, united_unique_inter)
+    AN_ID_genic_check = annotation_single_to_master(AN_ID_genic, united_unique_inter)
     
-    AN_ID_inter_check = annotation_single_to_master(unique_clean_inter, AN_ID_inter, united_inter, size_inter)
-    
-    # Parsing through dataset
-    for i in range(size):
-        zize = len(unique_clean[i])  # number of Gene IDs
-    
-        # Helper function to check presence
-        def check_presence(target, source):
-            if zize == 1:
-                return [zize] if target in source else []
-            elif zize > 1:
-                return [x + 1 for x in range(zize) if target[x] in source]
-    
-        AN_ID_check.append(check_presence(unique_clean[i], AN_ID_clean[i]))
-        SN_ID_check.append(check_presence(unique_clean[i], SN_ID_clean[i]))
-        VP_ID_check.append(check_presence(unique_clean[i], VP_ID_clean[i]))
     
     
     
