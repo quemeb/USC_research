@@ -15,7 +15,7 @@ if (!requireNamespace("AnnoQR", quietly = TRUE)) {
   # Load devtools
   library(devtools)
   # Install AnnoQR from GitHub
-  install_github("USCbiostats/AnnoQR")
+  install_github("quemeb/AnnoQR")
 }
 
 # Load AnnoQR
@@ -131,5 +131,16 @@ df_all <- get_all_hits(cdata, basic_annotations)
 
 write.table(df_all, "ex_peaks.txt", sep = "\t", row.names = FALSE, quote = FALSE)
 
+```
+
+
+```{r}
+x <- regionQuery(contig = '20', start=26188698, end=26190631)
+total_count <- x$hits$total$value
+
+
+sink("test.txt")
+query_obj_to_json(regionQuery(contig = '20', start=26188698, end=26190631))
+sink()
 ```
 
