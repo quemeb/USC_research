@@ -171,13 +171,13 @@ def annotation_single_to_master(target, source):
     
     # Loop through the entire source list
     for i in range(len(source)):
-        zize = len(source[i])  # Number of Gene IDs in the current source element
+        zize = len(target[i])  # Number of Gene IDs in the current source element
 
         # Check for matches and append to temp accordingly
         if zize == 1:
-            temp.append([zize] if target[i] in source else [])
+            temp.append([zize] if target[i] in source[i] else [])
         elif zize > 1:
-            temp.append([x + 1 for x in range(zize) if target[i][x] in source])
+            temp.append([x for x in range(zize) if target[i][x] in source[i]])
             
     return temp
 
