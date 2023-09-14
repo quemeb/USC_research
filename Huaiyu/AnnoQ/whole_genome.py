@@ -260,8 +260,10 @@ def main():
     AN_ID_inter_check = annotation_single_to_master(AN_ID_inter, united_unique_inter)
     SN_ID_inter_check = annotation_single_to_master(SN_ID_inter, united_unique_inter)
     VP_ID_inter_check = annotation_single_to_master(VP_ID_inter, united_unique_inter)
-    AN_ID_genic_check = annotation_single_to_master(AN_ID_genic, united_unique_inter)
     
+    AN_ID_genic_check = annotation_single_to_master(AN_ID_genic, united_unique_genic)
+    SN_ID_genic_check = annotation_single_to_master(SN_ID_genic, united_unique_genic)
+    VP_ID_genic_check = annotation_single_to_master(VP_ID_genic, united_unique_genic)
     
     
     
