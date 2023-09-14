@@ -175,11 +175,15 @@ def annotation_single_to_master(target, source):
 
         # Check for matches and append to temp accordingly
         if zize == 1:
-            temp.append([zize] if source[i] in target else [])
+            temp.append([zize] if target[i] in source else [])
         elif zize > 1:
-            temp.append([x + 1 for x in range(zize) if source[i][x] in target])
+            temp.append([x + 1 for x in range(zize) if target[i][x] in source])
             
     return temp
+
+AN_ID_inter_check = annotation_single_to_master(AN_ID_inter, united_unique_inter)
+AN_ID_genic_check = annotation_single_to_master(AN_ID_genic, united_unique_genic)
+
 
 
 def main():
@@ -214,26 +218,16 @@ def main():
 
 
     """ Extracting Gene IDs"""
-    AN_ID_int = extract(AN_ID_intergenic)
-    AN_ID_gen = extract(AN_ID_genic)
+    AN_ID_inter = extract(AN_ID_intergenic)
+    AN_ID_genic = extract(AN_ID_genic)
     
     # Extracting Gene ID in SnpEff
-    SN_ID_int = extract(SN_ID_intergenic)
-    SN_ID_gen = extract(SN_ID_genic)
+    SN_ID_inter = extract(SN_ID_intergenic)
+    SN_ID_genic = extract(SN_ID_genic)
     
     # Extracting Gene ID in VEP
-    VP_ID_int = extract(VP_ID_intergenic)
-    VP_ID_gen = extract(VP_ID_genic)
-
-    
-    # Converting lists to arrays
-    AN_ID_inter = np.array(AN_ID_int, dtype=object)
-    SN_ID_inter = np.array(SN_ID_int, dtype=object)
-    VP_ID_inter = np.array(VP_ID_int, dtype=object)
-    
-    AN_ID_genic = np.array(AN_ID_gen, dtype=object)
-    SN_ID_genic = np.array(SN_ID_gen, dtype=object)
-    VP_ID_genic = np.array(VP_ID_gen, dtype=object)
+    VP_ID_inter = extract(VP_ID_intergenic)
+    VP_ID_genic = extract(VP_ID_genic)
     
     size_inter = len(AN_ID_inter)
     size_genic = len(AN_ID_genic)
@@ -245,18 +239,22 @@ def main():
     united_inter = [np.concatenate((AN_ID_inter[i], SN_ID_inter[i], VP_ID_inter[i]), axis=None) for i in range(size_inter)]
     united_genic = [np.concatenate((AN_ID_genic[i], SN_ID_genic[i], VP_ID_genic[i]), axis=None) for i in range(size_genic)]
     
+    # Converting lists to arrays
+    AN_ID_inter = np.array(AN_ID_inter, dtype=object)
+    SN_ID_inter = np.array(SN_ID_inter, dtype=object)
+    VP_ID_inter = np.array(VP_ID_inter, dtype=object)
+    
+    AN_ID_genic = np.array(AN_ID_genic, dtype=object)
+    SN_ID_genic = np.array(SN_ID_genic, dtype=object)
+    VP_ID_genic = np.array(VP_ID_genic, dtype=object)
+    
+    united_inter = np.array(united_inter, dtype=object)
+    united_genic = np.array(united_genic, dtype=object)
     
     # Getting rid of repeats for each SNP
     united_unique_inter = no_repeats(united_inter)
     united_unique_genic = no_repeats(united_genic)
-    
-    AN_ID_inter_check = []
-    AN_ID_genic_check = []
-    SN_ID_inter_check = []
-    SN_ID_genic_check = []
-    VP_ID_inter_check = []
-    VP_ID_genic_check = []
-    
+
     AN_ID_inter_check = annotation_single_to_master(AN_ID_inter, united_unique_inter)
     SN_ID_inter_check = annotation_single_to_master(SN_ID_inter, united_unique_inter)
     VP_ID_inter_check = annotation_single_to_master(VP_ID_inter, united_unique_inter)
