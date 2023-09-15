@@ -190,6 +190,11 @@ drop cov_psych
 //lowess mental_cat cov_burden, logit 
 //fp <cov_burden>, scale center replace: logit mental_cat <cov_burden>
 
+* cov_contact - linear 
+//lowess mental_cat cov_contact, logit 
+//fp <cov_contact>, scale center replace: logit mental_cat <cov_contact>
+
+
 vl rebuild 
 
 **# Bivariant analysis for Mental Health 
@@ -271,6 +276,7 @@ foreach var in $cat_prelim {
 	global cat_prelim_expanded "$cat_prelim_expanded (i.`var')"
 }
 di "$cat_prelim_expanded"
+
 
 * prelim - stepwise models 
 stepwise, pr(0.05): logit mental_cat $cat_prelim_expanded $cont_prelim , nolog or
@@ -417,7 +423,7 @@ logit mental_cat region01 i.insu_full ib7.religion01 _v3 well_cat log_cov_psych 
 // counfounders = race (75%, 15%)
 
 
-* ------------------ FINAL MENTAL MODEL --------------------
+**# * ------------------ FINAL MENTAL MODEL --------------------
 logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race, nolog or 
 
 
@@ -448,36 +454,35 @@ list mental_cat p delta_beta if delta_beta > 2 & delta_beta != .
 twoway scatter delta_x2 p [aweight = delta_beta], msymbol(circle_hollow)
 
 * --------------- DROPPING PROBLEMATIC OBSERVATIONS - SENSITIVITY ANALYSIS 
-drop if delta_x2 > 4 & delta_x2 != .
-logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race, nolog or 
-estat gof, group(4) table
+*drop if delta_x2 > 4 & delta_x2 != .
+*logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race, nolog or 
+*estat gof, group(4) table
 
-drop p delta_x2 delta_dev delta_beta 
+*drop p delta_x2 delta_dev delta_beta 
 
-predict predicted, p
-predict delta_x2, dx2
-predict delta_dev, ddeviance
-predict delta_beta, dbeta
+*predict predicted, p
+*predict delta_x2, dx2
+*predict delta_dev, ddeviance
+*predict delta_beta, dbeta
 
 // change in Pearson GOF
-scatter delta_x2 p
-list mental_cat region01 _v3 well_cat log_cov_psych cov_contact _v1 insu_full religion01 p delta_x2 if delta_x2 > 10 & delta_x2 != .
+*scatter delta_x2 p
+*list mental_cat region01 _v3 well_cat log_cov_psych cov_contact _v1 insu_full religion01 p delta_x2 if delta_x2 > 10 & delta_x2 != .
 
 // change in Deviance GOF
-scatter delta_dev p 
-list mental_cat p delta_dev if delta_dev > 4 & delta_dev != .
+*scatter delta_dev p 
+*list mental_cat p delta_dev if delta_dev > 4 & delta_dev != .
 
 // change in cooks distance 
-scatter delta_beta p 
-list mental_cat p delta_beta if delta_beta > 2 & delta_beta != .
-twoway scatter delta_x2 p [aweight = delta_beta], msymbol(circle_hollow)
+*scatter delta_beta p 
+*list mental_cat p delta_beta if delta_beta > 2 & delta_beta != .
+*twoway scatter delta_x2 p [aweight = delta_beta], msymbol(circle_hollow)
 
 
 // NOT RELEVANT SINCE WE DID A INFERENCE MODEL PREVIOUSLY, just for fun lol 
 * ---------------- Predictions ---------------------------
 
 logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race, nolog or 
-
 
 estat classification
 lroc 
@@ -492,7 +497,8 @@ estat clas, cut(.13861314)
 
 
 
-******************************* RESILIENCE MODEL 
+**# --------------------------- RESILIENCE MODEL ------------------------------
+
 
 *find cat and cont prelim
 

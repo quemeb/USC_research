@@ -71,11 +71,7 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
 
     # Iterate through the lists
     for uni, an, sn, vp in zip(uni_clean, AN, SN, VP):
-        
-        # Skip the loop iteration if any value is '.'
-        if '.' in [uni, an, sn, vp]:
-            continue
-        
+            
         temp = 0  # Temporary counter for the loop.
         des = []  # List to store which arrays agree with uni_clean.
         
@@ -166,20 +162,29 @@ def create_summary_file(chr, size, all_agree, two_agree, AN_agree_2, SN_agree_2,
 #create_summary_file(chr, size, all_agree, two_agree, AN_agree_2, SN_agree_2, VP_agree_2, one_agree, AN_agree_1, SN_agree_1, VP_agree_1, filename_1)
 
 
-def annotation_single_to_master(target, source):
-    temp = []
+def annotation_single_to_master(test, master):
+    geneid_list = []
+    complete_agree_list = []
+    partial_agree_list = []
+    SNP_annotation_rate = 0
     
     # Loop through the entire source list
-    for i in range(len(source)):
-        zize = len(target[i])  # Number of Gene IDs in the current source element
+    for i in range(len(master)):
+        zize = len(test[i])  # Number of Gene IDs in the current source element
+        SNP_annotation_rate = SNP_annotation_rate + zize # total number of annotations 
 
         # Check for matches and append to temp accordingly
         if zize == 1:
-            temp.append([zize] if target[i] in source[i] else [])
-        elif zize > 1:
-            temp.append([x for x in range(zize) if target[i][x] in source[i]])
+            geneid_list.apprend([zize] if test[i] in master[i] else [])
+            complete_agree_list.append(1 if all(x in test[i] for x in master[i]) else 0)
+            partial_agree_list.append(1 if any(x in test[i] for x in master[i]) else 0)
             
-    return temp
+        elif zize > 1:
+            geneid_list.append([x+1 for x in range(len(test[i])) if master[i][x] in test[i]])
+            complete_agree_list.append(1 if all(x in test[i] for x in master[i]) else 0)
+            partial_agree_list.append(1 if any(x in test[i] for x in master[i]) else 0)
+
+    return geneod_list, complete_agree_list, partial_agree_list, SNP_annotation_rate 
 
 AN_ID_inter_check = annotation_single_to_master(AN_ID_inter, united_unique_inter)
 AN_ID_genic_check = annotation_single_to_master(AN_ID_genic, united_unique_genic)
