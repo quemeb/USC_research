@@ -163,9 +163,10 @@ def create_summary_file(chr, size, all_agree, two_agree, AN_agree_2, SN_agree_2,
 
 
 def annotation_single_to_master(test, master):
-    geneid_list = []
-    complete_agree_list = []
-    partial_agree_list = []
+    match_list = []
+    complete_annotation_list = []
+    partial_annotation_list = []
+    no_annotation_list = []
     SNP_annotation_rate = 0
     
     # Loop through the entire source list
@@ -175,16 +176,20 @@ def annotation_single_to_master(test, master):
 
         # Check for matches and append to temp accordingly
         if zize == 1:
-            geneid_list.apprend([zize] if test[i] in master[i] else [])
-            complete_agree_list.append(1 if all(x in test[i] for x in master[i]) else 0)
-            partial_agree_list.append(1 if any(x in test[i] for x in master[i]) else 0)
+            match_list.apprend([zize] if test[i] in master[i] else [])
+            if all(x in test[i] for x in master[i]):
+                complete_annotation_list.append(1)
+                partial_annotation_list.append(0)
+            elif 
+                complete_annotation_list.append(1 if all(x in test[i] for x in master[i]) else 0)
+                partial_annotation_list.append(1 if any(x in test[i] for x in master[i]) else 0)
             
         elif zize > 1:
-            geneid_list.append([x+1 for x in range(len(test[i])) if master[i][x] in test[i]])
+            match_list.append([x+1 for x in range(len(test[i])) if master[i][x] in test[i]])
             complete_agree_list.append(1 if all(x in test[i] for x in master[i]) else 0)
             partial_agree_list.append(1 if any(x in test[i] for x in master[i]) else 0)
 
-    return geneod_list, complete_agree_list, partial_agree_list, SNP_annotation_rate 
+    return match_list, complete_annotation_list, partial_annotation_list, SNP_annotation_rate 
 
 AN_ID_inter_check = annotation_single_to_master(AN_ID_inter, united_unique_inter)
 AN_ID_genic_check = annotation_single_to_master(AN_ID_genic, united_unique_genic)
