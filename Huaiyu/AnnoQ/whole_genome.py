@@ -163,39 +163,75 @@ def create_summary_file(chr, size, all_agree, two_agree, AN_agree_2, SN_agree_2,
 
 
 def annotation_single_to_master(test, master):
+    # Initialize lists to store matches and annotation rates.
     match_list = []
     complete_annotation_list = []
     partial_annotation_list = []
     no_annotation_list = []
-    SNP_annotation_rate = 0
+    snp_annotation_rate = 0  # Initialize the rate counter
     
-    # Loop through the entire source list
-    for i in range(len(master)):
-        zize = len(test[i])  # Number of Gene IDs in the current source element
-        SNP_annotation_rate = SNP_annotation_rate + zize # total number of annotations 
-
-        # Check for matches and append to temp accordingly
+    # Iterate through both the test and master lists
+    for i, (test_item, master_item) in enumerate(zip(test, master)):
+        zize = len(test_item)  # Number of Gene IDs in the current test item
+        snp_annotation_rate += zize  # Increment the annotation rate counter
+        
+        # Case 1: If there is only one Gene ID in the test item
         if zize == 1:
-            match_list.apprend([zize] if test[i] in master[i] else [])
-            if all(x in test[i] for x in master[i]):
-                complete_annotation_list.append(1)
-                partial_annotation_list.append(0)
-                no_annotation_list.append(0)
-            elif any(x in test[i] for x in master[i]):
-                complete_annotation_list.append(0)
-                partial_annotation_list.append(1)
-                no_annotation_list.append(0)
-            else 
+            # Check if the test item is in the master item
+            is_match = test_item in master_item
             
+            # Add to match_list based on the result
+            match_list.append([zize] if is_match else [])
+            
+            # Add to annotation lists, casting boolean to integer (1 if True, 0 if False)
+            complete_annotation_list.append(int(is_match))
+            partial_annotation_list.append(int(is_match))
+        
+        # Case 2: If there is more than one Gene ID in the test item
         elif zize > 1:
-            match_list.append([x+1 for x in range(len(test[i])) if master[i][x] in test[i]])
-            complete_agree_list.append(1 if all(x in test[i] for x in master[i]) else 0)
-            partial_agree_list.append(1 if any(x in test[i] for x in master[i]) else 0)
+            # Get indices of matching IDs from the master item
+            match_indices = [x + 1 for x, val in enumerate(master_item) if val in test_item]
+            match_list.append(match_indices if match_indices else [])
+            
+            # Check for complete or partial matches between test_item and master_item
+            complete_match = all(x in test_item for x in master_item)
+            partial_match = any(x in test_item for x in master_item)
+            
+            # Append results to respective lists
+            complete_annotation_list.append(int(complete_match))
+            partial_annotation_list.append(int(partial_match))
+            no_annotation_list.append(int(not partial_match))
+            
+    # Return the results as a tuple
+    return match_list, complete_annotation_list, partial_annotation_list, no_annotation_list, snp_annotation_rate
 
-    return match_list, complete_annotation_list, partial_annotation_list, SNP_annotation_rate 
 
-AN_ID_inter_check = annotation_single_to_master(AN_ID_inter, united_unique_inter)
-AN_ID_genic_check = annotation_single_to_master(AN_ID_genic, united_unique_genic)
+def run_and_store_results(func, args, output_names):
+    """
+    Runs a function with given arguments and stores its multiple outputs in a dictionary.
+    
+    Parameters:
+    func (callable): The function to run.
+    args (tuple): The arguments to pass to the function.
+    base_name (str): The base name to prepend to each output variable.
+    output_names (list of str): The names of the output variables.
+    
+    Returns:
+    dict: A dictionary containing the named outputs.
+    """
+    # Initialize a dictionary to hold the results
+    result_dict = {}
+    
+    # Function call
+    outputs = func(*args)
+
+    # Create dynamic dictionary keys and assign values
+    for name, output in zip(output_names, outputs):
+        key_name = f"{name}"
+        result_dict[key_name] = output
+    
+    return result_dict
+
 
 
 
@@ -268,13 +304,18 @@ def main():
     united_unique_inter = no_repeats(united_inter)
     united_unique_genic = no_repeats(united_genic)
 
-    AN_ID_inter_check = annotation_single_to_master(AN_ID_inter, united_unique_inter)
-    SN_ID_inter_check = annotation_single_to_master(SN_ID_inter, united_unique_inter)
-    VP_ID_inter_check = annotation_single_to_master(VP_ID_inter, united_unique_inter)
+
+    # Names of the variables you want to create
+    output_names = ['match_list', 'complete_annotation_list', 'partial_annotation_list', 'no_annotation_list', 'snp_annotation_rate']
+
+    AN_ID_inter_check = run_and_store_results(annotation_single_to_master, (AN_ID_inter, united_unique_inter), output_names)
+    SN_ID_inter_check = run_and_store_results(annotation_single_to_master, (SN_ID_inter, united_unique_inter), output_names)
+    VP_ID_inter_check = run_and_store_results(annotation_single_to_master, (VP_ID_inter, united_unique_inter), output_names)
     
-    AN_ID_genic_check = annotation_single_to_master(AN_ID_genic, united_unique_genic)
-    SN_ID_genic_check = annotation_single_to_master(SN_ID_genic, united_unique_genic)
-    VP_ID_genic_check = annotation_single_to_master(VP_ID_genic, united_unique_genic)
+    AN_ID_genic_check = run_and_store_results(annotation_single_to_master, (AN_ID_genic, united_unique_genic), output_names)
+    SN_ID_genic_check = run_and_store_results(annotation_single_to_master, (SN_ID_genic, united_unique_genic), output_names)
+    VP_ID_genic_check = run_and_store_results(annotation_single_to_master, (VP_ID_genic, united_unique_genic), output_names)
+
     
     
     
