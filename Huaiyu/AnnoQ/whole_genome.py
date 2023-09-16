@@ -185,7 +185,12 @@ def annotation_single_to_master(test, master):
             
             # Add to annotation lists, casting boolean to integer (1 if True, 0 if False)
             complete_annotation_list.append(int(is_match))
-            partial_annotation_list.append(int(is_match))
+            #complete_agreement += int(is_match)
+            # There can't be partial agreement in a dichotomous outcome, this is just a placeholder
+            # if we ever want to include something else and for list ordering purposes
+            partial_annotation_list.append(0)
+            no_annotation_list.append(int(not is_match))
+            #no_agreement += int(not is_match)
         
         # Case 2: If there is more than one Gene ID in the test item
         elif zize > 1:
@@ -193,17 +198,35 @@ def annotation_single_to_master(test, master):
             match_indices = [x + 1 for x, val in enumerate(master_item) if val in test_item]
             match_list.append(match_indices if match_indices else [])
             
-            # Check for complete or partial matches between test_item and master_item
-            complete_match = all(x in test_item for x in master_item)
-            partial_match = any(x in test_item for x in master_item)
+            # Initialize both as False at the start of the loop
+            complete_match = False
+            partial_match = False
+            
+            # Check for complete match first
+            if all(x in test_item for x in master_item):
+                complete_match = True
+            # Check for partial match only if complete_match is False
+            elif any(x in test_item for x in master_item):
+                partial_match = True
             
             # Append results to respective lists
             complete_annotation_list.append(int(complete_match))
             partial_annotation_list.append(int(partial_match))
-            no_annotation_list.append(int(not partial_match))
+            no_annotation_list.append(int(not partial_match) and not complete_match)
+            
+    complete_agreement = sum(complete_annotation_list)
+    partial_agreement = sum(partial_annotation_list)
+    no_agreement = sum(no_annotation_list)
             
     # Return the results as a tuple
-    return match_list, complete_annotation_list, partial_annotation_list, no_annotation_list, snp_annotation_rate
+    return (match_list, 
+    complete_annotation_list, 
+    partial_annotation_list, 
+    no_annotation_list, 
+    snp_annotation_rate,
+    complete_agreement,
+    partial_agreement,
+    no_agreement)
 
 
 def run_and_store_results(func, args, output_names):
@@ -306,7 +329,7 @@ def main():
 
 
     # Names of the variables you want to create
-    output_names = ['match_list', 'complete_annotation_list', 'partial_annotation_list', 'no_annotation_list', 'snp_annotation_rate']
+    output_names = ['match_list', 'complete_annotation_list', 'partial_annotation_list', 'no_annotation_list', 'snp_annotation_rate', 'complete_agreement', 'partial_agreement', 'no_agreement']
 
     AN_ID_inter_check = run_and_store_results(annotation_single_to_master, (AN_ID_inter, united_unique_inter), output_names)
     SN_ID_inter_check = run_and_store_results(annotation_single_to_master, (SN_ID_inter, united_unique_inter), output_names)
