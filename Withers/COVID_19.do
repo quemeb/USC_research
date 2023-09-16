@@ -10,7 +10,7 @@ import spss using "https://github.com/quemeb/USC_research/raw/main/Withers/EXPLO
 * Dropping made up dicho variables
 ds *_01
 drop `r(varlist)'
-drop if Ageyears < 18
+drop if Ageyears < 18 | Ageyears > 75
 
 * Making all variables lower case... 
 rename _all, lower
@@ -278,8 +278,7 @@ foreach var in $cat_prelim {
 di "$cat_prelim_expanded"
 
 
-* prelim - stepwise models 
-stepwise, pr(0.05): logit mental_cat $cat_prelim_expanded $cont_prelim , nolog or
+**# prelim - stepwise models 
 stepwise, pr(0.1): logit mental_cat $cat_prelim_expanded $cont_prelim , nolog or
 
 // need to explain the log-transformed meaning increase 
@@ -297,7 +296,7 @@ sw, pr(0.1): logit mental_cat region01 (i.insu) (ib7.religion01) (ib3._v3) (i.we
 // no lefovers came back significant 
 
 * ---------- Preliminary model after stepwises 
-logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu ib7.religion01, nolog or 
+logit mental_cat region01 i.insu i.religion01 _v3 i.well_cat log_cov_psych cov_contact ib3._v1, nolog or 
 
 * --- combining categories 
 test 4.insu = 10.insu
@@ -310,7 +309,7 @@ label values insu_full insu_fullf
 
 
 * --- prelim final model
-logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01, nolog or 
+logit mental_cat region01 i._v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01, nolog or 
 
 *# _______________________ INTERACTIONS ___________________________ 
 // no interactions were found 
@@ -333,13 +332,13 @@ logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_
 
 
 * --------- Model after interactions 
-logit mental_cat region01 i.insu_full ib7.religion01 _v3 well_cat log_cov_psych cov_contact ib3._v1, nolog or 
+logit mental_cat region01 i.insu_full ib7.religion01 i._v3 well_cat log_cov_psych cov_contact ib3._v1, nolog or 
 
 *# ______________ CONFOUNDERS ____________________
 
 // Define a macro for potential confounders
-*global potential_confounders "ageyears sex01 i.race "
-*global confounders_cont ""
+global potential_confounders "ageyears sex01 i.race "
+global confounders_cont ""
 
 // Loop through each main independent variable and each potential confounder
 *foreach main in region01 _v3 well_cat log_cov_psych cov_contact {
@@ -374,7 +373,7 @@ logit mental_cat region01 i.insu_full ib7.religion01 _v3 well_cat log_cov_psych 
 *	logit mental_cat i.insu_full
 *	scalar b1 = _b[1.insu_full]
 *	scalar b2 = _b[2.insu_full]
-*	
+	
 *	logit mental_cat i.insu_full `conf'
 *	scalar b11 = _b[1.insu_full]
 *	scalar b22 = _b[2.insu_full]
@@ -391,12 +390,12 @@ logit mental_cat region01 i.insu_full ib7.religion01 _v3 well_cat log_cov_psych 
 *	scalar b1 = _b[1.religion01]
 *	scalar b2 = _b[2.religion01]
 *	scalar b8 = _b[8.religion01]
-	
+
 *	logit mental_cat ib7.religion01 `conf', nolog or
 *	scalar b11 = _b[1.religion01]
 *	scalar b22 = _b[2.religion01]
 *	scalar b88 = _b[8.religion01]
-*
+
 *	scalar perc_change1 = 100 * (b1 - b11) / b1 
 *	scalar perc_change2 = 100 * (b2 - b22) / b2
 *	scalar perc_change8 = 100 * (b8 - b88) / b8
@@ -410,11 +409,11 @@ logit mental_cat region01 i.insu_full ib7.religion01 _v3 well_cat log_cov_psych 
 *	logit mental_cat ib3._v1
 *	scalar b1 = _b[1._v1]
 *	scalar b2 = _b[2._v1]
-	
+*
 *	logit mental_cat ib3._v1 `conf'
 *	scalar b11 = _b[1._v1]
 *	scalar b22 = _b[2._v1]
-	
+
 *	scalar perc_change1 = 100 * (b1 - b11) / b1 
 *	scalar perc_change2 = 100 * (b2 - b22) / b2
 *	di "Percent change in coefficient for Improved: " float(perc_change1) "%"
