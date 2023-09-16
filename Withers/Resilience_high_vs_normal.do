@@ -10,7 +10,7 @@ import spss using "https://github.com/quemeb/USC_research/raw/main/Withers/EXPLO
 * Dropping made up dicho variables
 ds *_01
 drop `r(varlist)'
-drop if Ageyears < 18 | Ageyears > 70
+drop if Ageyears < 18 | Ageyears > 75
 
 * Making all variables lower case... 
 rename _all, lower
@@ -286,8 +286,9 @@ foreach var in $cat_prelim {
 }
 di "$cat_prelim_expanded"
 
-* prelim - stepwise models 
+**# prelim - stepwise models 
 stepwise, pr(0.1): logit res_cat $cat_prelim_expanded $cont_prelim , nolog or
+
 
 * checking for significance in the terms taken out earlier
 global leftover_cat_expanded ""
@@ -400,10 +401,7 @@ twoway scatter delta_x2 p [aweight = delta_beta], msymbol(circle_hollow)
 
 * ---------------- Predictions ---------------------------
 
-logit res_cat log_cov_contact cov_burden cov_psych ib2._v3 i.sex01 i.residence01 i.living_combined i.race01, nolog or
-
-* FINAL FINAL MODEL AFTER SENSITIVITY 
-logit res_cat log_cov_contact cov_burden cov_psych i.sex01 i.residence01 i.race01, nolog or
+logit res_cat cov_fear_cos i.region01 ib2.race01, nolog or 
 
 estat classification
 lroc 
@@ -411,7 +409,7 @@ lsens
 predict p
 cutpt res_cat p
 
-logit res_cat log_cov_contact cov_burden cov_psych i.sex01 i.residence01 i.race01, nolog or
-estat clas, cut(.26033308)
+logit res_cat cov_fear_cos i.region01 ib2.race01, nolog or 
+estat clas, cut(.03744664)
 
 

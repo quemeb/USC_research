@@ -180,9 +180,12 @@ def annotation_single_to_master(test, master):
             if all(x in test[i] for x in master[i]):
                 complete_annotation_list.append(1)
                 partial_annotation_list.append(0)
-            elif 
-                complete_annotation_list.append(1 if all(x in test[i] for x in master[i]) else 0)
-                partial_annotation_list.append(1 if any(x in test[i] for x in master[i]) else 0)
+                no_annotation_list.append(0)
+            elif any(x in test[i] for x in master[i]):
+                complete_annotation_list.append(0)
+                partial_annotation_list.append(1)
+                no_annotation_list.append(0)
+            else 
             
         elif zize > 1:
             match_list.append([x+1 for x in range(len(test[i])) if master[i][x] in test[i]])
