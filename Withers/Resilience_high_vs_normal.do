@@ -10,7 +10,7 @@ import spss using "https://github.com/quemeb/USC_research/raw/main/Withers/EXPLO
 * Dropping made up dicho variables
 ds *_01
 drop `r(varlist)'
-drop if Ageyears < 18
+drop if Ageyears < 18 | Ageyears > 70
 
 * Making all variables lower case... 
 rename _all, lower
@@ -305,13 +305,6 @@ sw, pr(0.1): logit res_cat cov_fear_cos $leftover_cat_expanded $leftover_cont, n
 logit res_cat cov_fear_cos i.region01 ib5.race01, nolog or 
 
 
-* --- combining categories 
-test 1.livingstatus01 = 2.livingstatus01
-gen living_combined = 0
-replace living_combined = 1 if livingstatus01 == 1 | livingstatus01 == 2
-label variable living_combined "Combined livingstatus" 
-label define living_combinedf 0 "I live with other people than family" 1 "I live alone or with family"
-label values living_combined living_combinedf 
 
 
 
@@ -330,11 +323,11 @@ logit res_cat cov_fear_cos i.region01 ib5.race01, nolog or
 *# ______________ CONFOUNDERS ____________________
 
 // Define a macro for potential confounders
-global potential_confounders "age_cosine i.race01"
+global potential_confounders "ageyears sex01"
 global confounders_cont ""
 
 // Loop through each main independent variable and each potential confounder
-foreach main in log_cov_contact cov_burden cov_psych _v3 sex01 living_combined {
+foreach main in cov_fear_cos region01{
     foreach conf in $potential_confounders {
         di "Testing for confounding effect of `conf' on `main'..."
 
@@ -358,23 +351,8 @@ foreach main in log_cov_contact cov_burden cov_psych _v3 sex01 living_combined {
 }
 di "$confounders_cont"
 
-
-foreach conf in $potential_confounders {
-	logit res_cat i.residence01, nolog or
-	scalar b1 = _b[2.residence01]
-	scalar b2 = _b[3.residence01]
-	
-	logit res_cat i.residence01 `conf', nolog or
-	scalar b11 = _b[2.residence01]
-	scalar b22 = _b[3.residence01]
-
-
-	scalar perc_change1 = 100 * (b1 - b11) / b1 
-	scalar perc_change2 = 100 * (b2 - b22) / b2
-	di "Percent change in coefficient for Rural: " float(perc_change1) "%"
-	di "Percent change in coefficient for Suburban: " float(perc_change2) "%"
-}
-// counfounders = no confounding 
+logit res_cat cov_fear_cos region01 i.race01, nolog 
+exlogistic res_cat cov_fear_cos region01 i.race01 ageyears, nolog 
 
 
 **# * ------------------ FINAL MENTAL MODEL --------------------
