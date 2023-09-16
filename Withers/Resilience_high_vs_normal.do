@@ -302,66 +302,63 @@ sw, pr(0.1): logit res_cat cov_fear_cos $leftover_cat_expanded $leftover_cont, n
 // dropping cov_contact since it is not statistically signfincant in the exploratory model at p =0.1 
 
 * ---------- Preliminary model after stepwises 
-logit res_cat cov_fear_cos i.region01 ib5.race01, nolog or 
-
-
+logit res_cat cov_fear_cos i.region01 ib2.race01, nolog or 
 
 
 
 * --- prelim final model
 
-logit res_cat cov_fear_cos i.region01 ib5.race01, nolog or 
+logit res_cat cov_fear_cos i.region01 ib2.race01, nolog or 
 
 *# _______________________ INTERACTIONS ___________________________ 
 // no interactions were found 
 *global potential_interactions "c.ageyears c.sex01"
 
 *foreach i in $potential_interactions {
-*	logit res_cat c.cov_fear_cos##`i' region01##`i' ib5.race01##`i', nolog or 
+*	logit res_cat c.cov_fear_cos##`i' region01##`i' ib2.race01##`i', nolog or 
 *}
 
 *# ______________ CONFOUNDERS ____________________
 
 // Define a macro for potential confounders
-global potential_confounders "ageyears sex01"
-global confounders_cont ""
+*global potential_confounders "ageyears sex01"
+*global confounders_cont ""
 
 // Loop through each main independent variable and each potential confounder
-foreach main in cov_fear_cos region01{
-    foreach conf in $potential_confounders {
-        di "Testing for confounding effect of `conf' on `main'..."
+*foreach main in cov_fear_cos region01{
+*    foreach conf in $potential_confounders {
+*        di "Testing for confounding effect of `conf' on `main'..."
 
         // Run the logistic regression model without the confounder
-        logit res_cat `main'
+*        logit res_cat `main'
         // Store the coefficient for the main variable
-        scalar b1 = _b[`main']
+*        scalar b1 = _b[`main']
 
         // Run the logistic regression model with the confounder
-        logit res_cat `main' `conf'
+*        logit res_cat `main' `conf'
         // Store the coefficient for the main variable
-        scalar b2 = _b[`main']
+*        scalar b2 = _b[`main']
 
         // Calculate the percentage change in the coefficient
-       scalar perc_change = 100 * (b2 - b1) / b1
-         di "Percent change in coefficient for `main' when including `conf': " float(perc_change) "%"
-		if (abs(perc_change) > 10){
-			global confounders_cont "$confounders_cont `conf'"
-		}
-    }
-}
-di "$confounders_cont"
+*       scalar perc_change = 100 * (b2 - b1) / b1
+*         di "Percent change in coefficient for `main' when including `conf': " float(perc_change) "%"
+*		if (abs(perc_change) > 10){
+*			global confounders_cont "$confounders_cont `conf'"
+*		}
+*    }
+*}
+*di "$confounders_cont"
 
-logit res_cat cov_fear_cos region01 i.race01, nolog 
-exlogistic res_cat cov_fear_cos region01 i.race01 ageyears, nolog 
+logit res_cat cov_fear_cos i.region01 ib2.race01, nolog or 
 
 
 **# * ------------------ FINAL MENTAL MODEL --------------------
-logit res_cat log_cov_contact cov_burden cov_psych ib2._v3 i.sex01 i.residence01 i.living_combined i.race01, nolog or
+logit res_cat cov_fear_cos i.region01 ib2.race01, nolog or 
 
 
 * ----------------- Model diagnostics ----------------------
 
-estat gof, group(10) table 
+estat gof, group(4) table 
 // doesn't depart from goodness
 
 predict predicted, p

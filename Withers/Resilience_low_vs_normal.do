@@ -10,7 +10,7 @@ import spss using "https://github.com/quemeb/USC_research/raw/main/Withers/EXPLO
 * Dropping made up dicho variables
 ds *_01
 drop `r(varlist)'
-drop if Ageyears < 18
+drop if Ageyears < 18 | Ageyears > 70
 
 * Making all variables lower case... 
 rename _all, lower
@@ -168,11 +168,11 @@ fp <weight_kg>, scale center replace: logit res_cat <weight_kg>
 
 * ageyears - cosine 
 //lowess res_cat ageyears, logit 
-//fp <ageyears>, scale center replace: logit res_cat age18 <ageyears>
+//fp <ageyears>, scale center replace: logit res_cat <ageyears>
 gen age_cosine = cos(ageyears)
 //lowess res_cat age_cosine, logit 
 //fp <age_cosine>, scale center replace: logit res_cat <age_cosine>
-*drop ageyears 
+drop ageyears 
 
 * cov_effect - cosine  
 //lowess res_cat cov_effect, logit 
