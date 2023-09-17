@@ -8,7 +8,8 @@ import re
 pattern = re.compile("ENSG...........")
 
 def load_data(file_path):
-    df = pd.read_csv(file_path, delimiter="\t", dtype= object, compression='gzip')
+    columns_needed = ["chr", "pos", "ref", "alt", "rs_dbSNP151", "ANNOVAR_ensembl_Gene_ID","ANNOVAR_ensembl_Closest_gene(intergenic_only)", "SnpEff_ensembl_Gene_ID", "VEP_ensembl_Gene_ID"]
+    df = pd.read_csv(file_path, usecols=columns_needed, delimiter="\t", dtype= object, compression='gzip')
     return df
 
 def process_data(data):
@@ -70,25 +71,24 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
     }
 
     # Iterate through the lists
-    for uni, an, sn, vp in zip(uni_clean, AN, SN, VP):
-            
+    for i in range(len(uni_clean)):
         temp = 0  # Temporary counter for the loop.
         des = []  # List to store which arrays agree with uni_clean.
         
-        zize = len(uni)  # Length of the union set for this iteration.
+        zize = len(uni_clean[i])  # Length of the union set for this iteration.
         
         # Check if AN agrees with uni_clean and update counters.
-        if zize == len(an):
+        if zize == len(AN[i]):
             temp += 1
             des.append('A')
             
         # Check if SN agrees with uni_clean and update counters.
-        if zize == len(sn):
+        if zize == len(SN[i]):
             temp += 1
             des.append('S')
             
         # Check if VP agrees with uni_clean and update counters.
-        if zize == len(vp):
+        if zize == len(VP[i]):
             temp += 1
             des.append('V')
         
@@ -108,6 +108,7 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
             counters['none_agree'] += 1
 
     return counters  # Return the counters dictionary.
+
 
 def save_processed_file(filename, results, output_directory="/home1/queme/AnnoQ/processed_hrc_12_2019/"):
     """
@@ -133,23 +134,23 @@ def save_processed_file(filename, results, output_directory="/home1/queme/AnnoQ/
     
     # Saving the results to a .txt file
     output_path = f"{output_directory}{result_filename}"
-    results.to_csv(path_or_buf=output_path, sep="\t", index=False)
+    results.to_csv(path_or_buf=output_path, sep="/t", index=False)
 
 def create_summary_file(chr, size, all_agree, two_agree, AN_agree_2, SN_agree_2, VP_agree_2, one_agree, AN_agree_1, SN_agree_1, VP_agree_1, filename_1):
     """Create and save a summary file."""
     
     summary_lines = [
-        f"For Chromosome: {chr[1]}\n",
-        f"There are: {size} SNPs\n\n",
-        f"All tools agree with all GeneIDs: {all_agree} ({all_agree/size*100:.2f}%)\n",
+        f"For Chromosome: {chr[1]}/n",
+        f"There are: {size} SNPs/n/n",
+        f"All tools agree with all GeneIDs: {all_agree} ({all_agree/size*100:.2f}%)/n",
         f"""At least two tools agree with all GeneIDs: {two_agree} ({two_agree/size*100:.2f}%)
-          \t - Annovar: {AN_agree_2}\n
-          \t - SnpEff: {SN_agree_2}\n
-          \t - VEP: {VP_agree_2}\n""",
+          /t - Annovar: {AN_agree_2}/n
+          /t - SnpEff: {SN_agree_2}/n
+          /t - VEP: {VP_agree_2}/n""",
         f"""At least one tool agrees with all GeneIDs: {one_agree} ({one_agree/size*100:.2f}%)
-          \t - Annovar: {AN_agree_1}\n
-          \t - SnpEff: {SN_agree_1}\n
-          \t - VEP: {VP_agree_1}\n"""
+          /t - Annovar: {AN_agree_1}/n
+          /t - SnpEff: {SN_agree_1}/n
+          /t - VEP: {VP_agree_1}/n"""
     ]
     
     summary_filename = f"{filename_1[0]}_summary.{filename_1[1]}"
@@ -212,7 +213,7 @@ def annotation_single_to_master(test, master):
             # Append results to respective lists
             complete_annotation_list.append(int(complete_match))
             partial_annotation_list.append(int(partial_match))
-            no_annotation_list.append(int(not partial_match) and not complete_match)
+            no_annotation_list.append(int(not partial_match and not complete_match))
             
     complete_agreement = sum(complete_annotation_list)
     partial_agreement = sum(partial_annotation_list)
@@ -262,24 +263,25 @@ def main():
 
     # Reading file
     file_path = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
-    cdata = load_data(file_path)
+    cdata = load_data("C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\21.annotated.snp.gz")
     
     # Selecting data
     AN_ID_genic = cdata["ANNOVAR_ensembl_Gene_ID"]  #Gene ID should be here
     AN_ID_intergenic = cdata["ANNOVAR_ensembl_Closest_gene(intergenic_only)"]    #alternative place for Gene ID
-    AN_ID_tog = [AN_ID_intergenic[i] if gene_id == "." else gene_id for i, gene_id in enumerate(AN_ID_genic)]
-    AN_ID_genic = [gene_id for gene_id in AN_ID_genic if gene_id != '.']
-    AN_ID_intergenic = [gene_id for gene_id in AN_ID_intergenic if not gene_id.startswith('.')]
-
+    AN_ID_tog = [AN_ID_intergenic[i] if gene_id.startswith('.') else gene_id for i, gene_id in enumerate(AN_ID_genic)]
 
     SN_ID_tog = cdata["SnpEff_ensembl_Gene_ID"]   #Gene ID for SnpEff
-    SN_ID_intergenic = [SN_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if not gene_id.startswith('.')]
+    SN_ID_intergenic = [SN_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if gene_id.startswith('.')]
     SN_ID_genic = [SN_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if not gene_id.startswith('.')]
 
     
     VP_ID_tog = cdata["VEP_ensembl_Gene_ID"]      #Gene ID for VEP
-    VP_ID_intergenic = [VP_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if not gene_id.startswith('.')]
+    VP_ID_intergenic = [VP_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if gene_id.startswith('.')]
     VP_ID_genic = [VP_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if not gene_id.startswith('.')]
+    
+    #Fixing lists after using them as reference
+    AN_ID_genic = [gene_id for gene_id in AN_ID_genic if not gene_id.startswith('.')]
+    AN_ID_intergenic = [gene_id for gene_id in AN_ID_intergenic if not gene_id.startswith('.')]
     
     # Extracting info from file
     chrs = cdata["chr"] # chromosome number
@@ -290,16 +292,16 @@ def main():
 
 
     """ Extracting Gene IDs"""
-    AN_ID_inter = extract(AN_ID_intergenic)
-    AN_ID_genic = extract(AN_ID_genic)
+    AN_ID_inter = no_repeats(extract(AN_ID_intergenic))
+    AN_ID_genic = no_repeats(extract(AN_ID_genic))
     
     # Extracting Gene ID in SnpEff
-    SN_ID_inter = extract(SN_ID_intergenic)
-    SN_ID_genic = extract(SN_ID_genic)
+    SN_ID_inter = no_repeats(extract(SN_ID_intergenic))
+    SN_ID_genic = no_repeats(extract(SN_ID_genic))
     
     # Extracting Gene ID in VEP
-    VP_ID_inter = extract(VP_ID_intergenic)
-    VP_ID_genic = extract(VP_ID_genic)
+    VP_ID_inter = no_repeats(extract(VP_ID_intergenic))
+    VP_ID_genic = no_repeats(extract(VP_ID_genic))
     
     size_inter = len(AN_ID_inter)
     size_genic = len(AN_ID_genic)
@@ -356,14 +358,13 @@ def main():
 
     """  HYPOTHESIS TESTING  """
 
-    tool_agreement_tog = annotation_agreement_rate(unique_clean, AN_ID_check, SN_ID_check, VP_ID_check)
-    tool_agreement_intergenic = annotation_agreement_rate(unique_clean, AN, SN, VP)
-    tool_agreement_genetic = annotation_agreement_rate(unique_clean, )
+    tool_agreement_intergenic = annotation_agreement_rate(united_unique_inter, AN_ID_inter, SN_ID_inter, VP_ID_inter)
+    tool_agreement_genetic = annotation_agreement_rate(united_unique_genic, AN_ID_genic, SN_ID_genic, VP_ID_genic)
     
     """ SUMMARY FILE CREATION """
     # Summary results
-    l_1 = "For Chromosome: " + chr[1] + "\n"
-    l_2 = "There are: %i" % size + " SNPs\n\n"
+    l_1 = "For Chromosome: " + chr[1] + "/n"
+    l_2 = "There are: %i" % size + " SNPs/n/n"
     l_3 = f"The agreement between all tools is: {tool_agreement_tog}"
 
 
