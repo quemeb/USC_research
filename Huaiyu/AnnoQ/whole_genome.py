@@ -343,14 +343,23 @@ def main():
 
     
     
-    
     """ Giving table """
     # Creating results table
-    column_names = ["Chr", "Position", "Ref", "Alt", "rs ID", "Gene_IDs", "ANNOVAR", "SnpEff", "VEP"]
-    data_values = [chrs, pos, ref, alt, rs, unique_clean, AN_ID_check, SN_ID_check, VP_ID_check]
+    #column_names = ["Chr", "Position", "Ref", "Alt", "rs ID", "Gene_IDs", "ANNOVAR", "SnpEff", "VEP"]
+    #data_values = [chrs, pos, ref, alt, rs, unique_clean, AN_ID_check, SN_ID_check, VP_ID_check]
     
-    results = pd.DataFrame({col: val for col, val in zip(column_names, data_values)})
+    #results = pd.DataFrame({col: val for col, val in zip(column_names, data_values)})
 
+    # Creating a DataFrame
+    df = pd.DataFrame({
+        'Chr': chrs,  # Chromosomes or tools
+        'Complete Agreement': [AN_ID_inter_check["complete_agreement"], SN_ID_inter_check["complete_agreement"], VP_ID_inter_check["complete_agreement"],
+        'Partial Agreement': [AN_ID_inter_check["complete_agreement"], sn_data[1], vp_data[1]],
+        'No Agreement': [AN_ID_inter_check["complete_agreement"], sn_data[2], vp_data[2]],
+        'Snp_Annotation_rate': [AN_ID_inter_check["complete_agreement"], sn_data[3], vp_data[3]]
+    })
+    
+    print(df)
     
     """ RESULTS FILE CREATION """
 
@@ -360,6 +369,10 @@ def main():
 
     tool_agreement_intergenic = annotation_agreement_rate(united_unique_inter, AN_ID_inter, SN_ID_inter, VP_ID_inter)
     tool_agreement_genetic = annotation_agreement_rate(united_unique_genic, AN_ID_genic, SN_ID_genic, VP_ID_genic)
+    
+    
+    
+    
     
     """ SUMMARY FILE CREATION """
     # Summary results
