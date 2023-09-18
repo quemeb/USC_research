@@ -171,49 +171,54 @@ def annotation_single_to_master(test, master):
     no_annotation_list = []
     snp_annotation_rate = 0  # Initialize the rate counter
     
+    # Get the length of the test and master lists; assume they have the same length
+    list_length = len(test)
+    
     # Iterate through both the test and master lists
-    for i, (test_item, master_item) in enumerate(zip(test, master)):
+    for i in range(list_length):
+        test_item = test[i]
+        master_item = master[i]
+        
         zize = len(test_item)  # Number of Gene IDs in the current test item
         snp_annotation_rate += zize  # Increment the annotation rate counter
         
-        # Case 1: If there is only one Gene ID in the test item
-        if zize == 1:
-            # Check if the test item is in the master item
-            is_match = test_item in master_item
+        # Case 1: If there is no Gene ID in the test item
+        if zize == 0:
+            no_annotation_list.append(1)
+            partial_annotation_list.append(0)
+            complete_annotation_list.append(0)
             
-            # Add to match_list based on the result
-            match_list.append([zize] if is_match else [])
+        # Case 2: If there is only one Gene ID in the test item
+        elif zize == 1:
+            is_match = test_item in master_item  # Check if the test item is in the master item
+            
+            match_list.append([1] if is_match else [])
             
             # Add to annotation lists, casting boolean to integer (1 if True, 0 if False)
             complete_annotation_list.append(int(is_match))
-            #complete_agreement += int(is_match)
-            # There can't be partial agreement in a dichotomous outcome, this is just a placeholder
-            # if we ever want to include something else and for list ordering purposes
-            partial_annotation_list.append(0)
+            partial_annotation_list.append(0)  # Placeholder
             no_annotation_list.append(int(not is_match))
-            #no_agreement += int(not is_match)
-        
-        # Case 2: If there is more than one Gene ID in the test item
-        elif zize > 1:
-            # Get indices of matching IDs from the master item
-            match_indices = [x + 1 for x, val in enumerate(master_item) if val in test_item]
+            
+        # Case 3: If there is more than one Gene ID in the test item
+    elif zize > 1:
+            match_indices = [x + 1 for x in range(len(master_item)) if master_item[x] in test_item]
             match_list.append(match_indices if match_indices else [])
             
-            # Initialize both as False at the start of the loop
-            complete_match = False
+            complete_match = False  # Initialize both as False at the start of the loop
             partial_match = False
-            
+    
             # Check for complete match first
             if all(x in test_item for x in master_item):
                 complete_match = True
             # Check for partial match only if complete_match is False
             elif any(x in test_item for x in master_item):
                 partial_match = True
-            
+    
             # Append results to respective lists
             complete_annotation_list.append(int(complete_match))
             partial_annotation_list.append(int(partial_match))
             no_annotation_list.append(int(not partial_match and not complete_match))
+
             
     complete_agreement = sum(complete_annotation_list)
     partial_agreement = sum(partial_annotation_list)
