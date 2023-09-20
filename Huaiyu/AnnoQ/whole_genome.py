@@ -44,14 +44,6 @@ def counter(arrays):
 
 def annotation_agreement_rate(uni_clean, AN, SN, VP):
     # Initialize a dictionary to store various counts.
-    
-    # Initialize lists to store matches and annotation rates.
-    match_list = []
-    complete_annotation_list = []
-    partial_annotation_list = []
-    no_annotation_list = []
-    snp_annotation_rate = 0  # Initialize the rate counter
-    
     counters = {
         'all_agree': 0,
         'two_agree': 0,
@@ -64,10 +56,9 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
         'SN_agree_1': 0,
         'VP_agree_1': 0,
     }
-
     # Mapping for two-agree scenarios.
     two_agree_mapping = {
-        'SA': 'AN_SN_agree_2',
+        'AS': 'AN_SN_agree_2',
         'SV': 'SN_VP_agree_2',
         'AV': 'AN_VP_agree_2'
     }
@@ -80,24 +71,24 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
     }
 
     # Iterate through the lists
-    for i in range(len(uni_clean)):       
-        master_item = uni_clean[i]
-        
+    for i in range(len(uni_clean)):
         temp = 0  # Temporary counter for the loop.
         des = []  # List to store which arrays agree with uni_clean.
         
-        # Check if SN agrees with uni_clean and update counters.
-        if all(x in SN[i] for x in master_item):
-            temp += 1
-            des.append('S')
-            
+        zize = len(uni_clean[i])  # Length of the union set for this iteration.
+        
         # Check if AN agrees with uni_clean and update counters.
-        if all(x in AN[i] for x in master_item):
+        if zize == len(AN[i]):
             temp += 1
             des.append('A')
             
+        # Check if SN agrees with uni_clean and update counters.
+        if zize == len(SN[i]):
+            temp += 1
+            des.append('S')
+            
         # Check if VP agrees with uni_clean and update counters.
-        if all(x in VP[i] for x in master_item):
+        if zize == len(VP[i]):
             temp += 1
             des.append('V')
         
@@ -113,8 +104,6 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
         elif temp == 1:  # Only one agrees
             counters['one_agree'] += 1
             counters[one_agree_mapping[des_str]] += 1
-            if des_str == 'A':
-                print(i)
         elif temp == 0:  # None agree
             counters['none_agree'] += 1
 
@@ -179,6 +168,13 @@ def annotation_single_to_master(test, master):
     # Get the length of the test and master lists; assume they have the same length
     list_length = len(test)
     snp_annotation_rate = 0
+    
+    # Initialize lists to store matches and annotation rates.
+    match_list = []
+    complete_annotation_list = []
+    partial_annotation_list = []
+    no_annotation_list = []
+    snp_annotation_rate = 0  # Initialize the rate counter
     
     # Iterate through both the test and master lists
     for i in range(list_length):
@@ -345,15 +341,10 @@ def main():
     output_names = ['match_list', 'complete_annotation_list', 'partial_annotation_list', 'no_annotation_list', 'snp_annotation_rate', 'complete_agreement', 'partial_agreement', 'no_agreement']
 
     AN_ID_inter_check = run_and_store_results(annotation_single_to_master, (AN_ID_inter, united_unique_inter), output_names)
-    
     SN_ID_inter_check = run_and_store_results(annotation_single_to_master, (SN_ID_inter, united_unique_inter), output_names)
-    
     VP_ID_inter_check = run_and_store_results(annotation_single_to_master, (VP_ID_inter, united_unique_inter), output_names)
-    
     AN_ID_genic_check = run_and_store_results(annotation_single_to_master, (AN_ID_genic, united_unique_genic), output_names)
-    
     SN_ID_genic_check = run_and_store_results(annotation_single_to_master, (SN_ID_genic, united_unique_genic), output_names)
-    
     VP_ID_genic_check = run_and_store_results(annotation_single_to_master, (VP_ID_genic, united_unique_genic), output_names)
 
     
