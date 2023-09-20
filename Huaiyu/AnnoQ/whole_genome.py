@@ -41,8 +41,17 @@ def inter(array1,array2):
 def counter(arrays):
     return sum(1 for arr in arrays if arr.size > 0)
 
+
 def annotation_agreement_rate(uni_clean, AN, SN, VP):
     # Initialize a dictionary to store various counts.
+    
+    # Initialize lists to store matches and annotation rates.
+    match_list = []
+    complete_annotation_list = []
+    partial_annotation_list = []
+    no_annotation_list = []
+    snp_annotation_rate = 0  # Initialize the rate counter
+    
     counters = {
         'all_agree': 0,
         'two_agree': 0,
@@ -58,7 +67,7 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
 
     # Mapping for two-agree scenarios.
     two_agree_mapping = {
-        'AS': 'AN_SN_agree_2',
+        'SA': 'AN_SN_agree_2',
         'SV': 'SN_VP_agree_2',
         'AV': 'AN_VP_agree_2'
     }
@@ -71,24 +80,24 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
     }
 
     # Iterate through the lists
-    for i in range(len(uni_clean)):
+    for i in range(len(uni_clean)):       
+        master_item = uni_clean[i]
+        
         temp = 0  # Temporary counter for the loop.
         des = []  # List to store which arrays agree with uni_clean.
         
-        zize = len(uni_clean[i])  # Length of the union set for this iteration.
-        
-        # Check if AN agrees with uni_clean and update counters.
-        if zize == len(AN[i]):
-            temp += 1
-            des.append('A')
-            
         # Check if SN agrees with uni_clean and update counters.
-        if zize == len(SN[i]):
+        if all(x in SN[i] for x in master_item):
             temp += 1
             des.append('S')
             
+        # Check if AN agrees with uni_clean and update counters.
+        if all(x in AN[i] for x in master_item):
+            temp += 1
+            des.append('A')
+            
         # Check if VP agrees with uni_clean and update counters.
-        if zize == len(VP[i]):
+        if all(x in VP[i] for x in master_item):
             temp += 1
             des.append('V')
         
@@ -104,6 +113,8 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
         elif temp == 1:  # Only one agrees
             counters['one_agree'] += 1
             counters[one_agree_mapping[des_str]] += 1
+            if des_str == 'A':
+                print(i)
         elif temp == 0:  # None agree
             counters['none_agree'] += 1
 
@@ -164,31 +175,26 @@ def create_summary_file(chr, size, all_agree, two_agree, AN_agree_2, SN_agree_2,
 
 
 def annotation_single_to_master(test, master):
-    # Initialize lists to store matches and annotation rates.
-    match_list = []
-    complete_annotation_list = []
-    partial_annotation_list = []
-    no_annotation_list = []
-    snp_annotation_rate = 0  # Initialize the rate counter
     
     # Get the length of the test and master lists; assume they have the same length
     list_length = len(test)
+    snp_annotation_rate = 0
     
     # Iterate through both the test and master lists
     for i in range(list_length):
         test_item = test[i]
         master_item = master[i]
         
-        zize = len(test_item)  # Number of Gene IDs in the current test item
-        snp_annotation_rate += zize  # Increment the annotation rate counter
-        
-        # Case 1: If there is no Gene ID in the test item
-        if zize == 0:
+        zize = len(master_item)  # Number of Gene IDs in the current master item
+        rate = len(test_item)   # Number of Gene IDs in the current test item
+        snp_annotation_rate += rate  # Increment the annotation rate counter
+  
+        # Case 1: If Gene ID is empty (this is mostly for VEP in intergenic region)
+        if rate == 0: 
             no_annotation_list.append(1)
             partial_annotation_list.append(0)
-            complete_annotation_list.append(0)
-            
-        # Case 2: If there is only one Gene ID in the test item
+            complete_annotation_list.append(0)        
+        # Case 2: If there is only one Gene ID in the master item (max(test) <= 1)
         elif zize == 1:
             is_match = test_item in master_item  # Check if the test item is in the master item
             
@@ -198,9 +204,8 @@ def annotation_single_to_master(test, master):
             complete_annotation_list.append(int(is_match))
             partial_annotation_list.append(0)  # Placeholder
             no_annotation_list.append(int(not is_match))
-            
-        # Case 3: If there is more than one Gene ID in the test item
-    elif zize > 1:
+        # Case 3: If there is more than one Gene ID in the master item
+        elif zize > 1:
             match_indices = [x + 1 for x in range(len(master_item)) if master_item[x] in test_item]
             match_list.append(match_indices if match_indices else [])
             
@@ -218,7 +223,7 @@ def annotation_single_to_master(test, master):
             complete_annotation_list.append(int(complete_match))
             partial_annotation_list.append(int(partial_match))
             no_annotation_list.append(int(not partial_match and not complete_match))
-
+        
             
     complete_agreement = sum(complete_annotation_list)
     partial_agreement = sum(partial_annotation_list)
@@ -269,6 +274,7 @@ def main():
     # Reading file
     file_path = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
     cdata = load_data("C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\21.annotated.snp.gz")
+#    cdata = load_data("C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\Code\\Test_data\\Test_data_set2.txt.gz")
     
     # Selecting data
     AN_ID_genic = cdata["ANNOVAR_ensembl_Gene_ID"]  #Gene ID should be here
@@ -318,6 +324,10 @@ def main():
     united_inter = [np.concatenate((AN_ID_inter[i], SN_ID_inter[i], VP_ID_inter[i]), axis=None) for i in range(size_inter)]
     united_genic = [np.concatenate((AN_ID_genic[i], SN_ID_genic[i], VP_ID_genic[i]), axis=None) for i in range(size_genic)]
     
+    # Getting rid of repeats for each SNP
+    united_unique_inter = no_repeats(united_inter)
+    united_unique_genic = no_repeats(united_genic)
+    
     # Converting lists to arrays
     AN_ID_inter = np.array(AN_ID_inter, dtype=object)
     SN_ID_inter = np.array(SN_ID_inter, dtype=object)
@@ -330,20 +340,20 @@ def main():
     united_inter = np.array(united_inter, dtype=object)
     united_genic = np.array(united_genic, dtype=object)
     
-    # Getting rid of repeats for each SNP
-    united_unique_inter = no_repeats(united_inter)
-    united_unique_genic = no_repeats(united_genic)
-
 
     # Names of the variables you want to create
     output_names = ['match_list', 'complete_annotation_list', 'partial_annotation_list', 'no_annotation_list', 'snp_annotation_rate', 'complete_agreement', 'partial_agreement', 'no_agreement']
 
     AN_ID_inter_check = run_and_store_results(annotation_single_to_master, (AN_ID_inter, united_unique_inter), output_names)
+    
     SN_ID_inter_check = run_and_store_results(annotation_single_to_master, (SN_ID_inter, united_unique_inter), output_names)
+    
     VP_ID_inter_check = run_and_store_results(annotation_single_to_master, (VP_ID_inter, united_unique_inter), output_names)
     
     AN_ID_genic_check = run_and_store_results(annotation_single_to_master, (AN_ID_genic, united_unique_genic), output_names)
+    
     SN_ID_genic_check = run_and_store_results(annotation_single_to_master, (SN_ID_genic, united_unique_genic), output_names)
+    
     VP_ID_genic_check = run_and_store_results(annotation_single_to_master, (VP_ID_genic, united_unique_genic), output_names)
 
     
@@ -376,8 +386,13 @@ def main():
     tool_agreement_genetic = annotation_agreement_rate(united_unique_genic, AN_ID_genic, SN_ID_genic, VP_ID_genic)
     
     
+        # Add dictionaries
+    sum_dict = {key: tool_agreement_intergenic[key] + tool_agreement_genetic[key] for key in tool_agreement_intergenic}
     
-    
+    SN = {key: SN_ID_genic_check[key] + SN_ID_inter_check[key] for key in SN_ID_genic_check}
+    AN = {key: AN_ID_genic_check[key] + AN_ID_inter_check[key] for key in AN_ID_genic_check}
+    VP = {key: VP_ID_genic_check[key] + VP_ID_inter_check[key] for key in VP_ID_genic_check}
+        
     
     """ SUMMARY FILE CREATION """
     # Summary results
