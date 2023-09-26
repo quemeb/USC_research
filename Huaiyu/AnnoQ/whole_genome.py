@@ -49,25 +49,25 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
         'two_agree': 0,
         'one_agree': 0,
         'none_agree': 0,
-        'AN_SN_agree_2': 0,
-        'SN_VP_agree_2': 0,
-        'AN_VP_agree_2': 0,
-        'AN_agree_1': 0,
-        'SN_agree_1': 0,
-        'VP_agree_1': 0,
+        'SA': 0,
+        'SV': 0,
+        'AV': 0,
+        'A': 0,
+        'S': 0,
+        'V': 0,
     }
     # Mapping for two-agree scenarios.
     two_agree_mapping = {
-        'AS': 'AN_SN_agree_2',
-        'SV': 'SN_VP_agree_2',
-        'AV': 'AN_VP_agree_2'
+        'AS': 'SA',
+        'SV': 'SV',
+        'AV': 'AV'
     }
     
     # Mapping for one-agree scenarios.
     one_agree_mapping = {
-        'A': 'AN_agree_1',
-        'S': 'SN_agree_1',
-        'V': 'VP_agree_1'
+        'A': 'A',
+        'S': 'S',
+        'V': 'V'
     }
 
     # Iterate through the lists
@@ -268,8 +268,8 @@ def run_and_store_results(func, args, output_names):
 def main():
 
     # Reading file
-    file_path = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
-    cdata = load_data("C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\21.annotated.snp.gz")
+   # file_path = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
+    cdata = load_data("C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\X.annotated.snp.gz")
 #    cdata = load_data("C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\Code\\Test_data\\Test_data_set2.txt.gz")
     
     # Selecting data
@@ -356,20 +356,22 @@ def main():
     
     #results = pd.DataFrame({col: val for col, val in zip(column_names, data_values)})
 
-    # Creating a DataFrame
-    df = pd.DataFrame({
-        'Chr': chrs,  # Chromosomes or tools
-        'Complete Agreement': [AN_ID_inter_check["complete_agreement"], SN_ID_inter_check["complete_agreement"], VP_ID_inter_check["complete_agreement"],
-        'Partial Agreement': [AN_ID_inter_check["complete_agreement"], sn_data[1], vp_data[1]],
-        'No Agreement': [AN_ID_inter_check["complete_agreement"], sn_data[2], vp_data[2]],
-        'Snp_Annotation_rate': [AN_ID_inter_check["complete_agreement"], sn_data[3], vp_data[3]]
-    })
-    
-    print(df)
+# =============================================================================
+#     # Creating a DataFrame
+#     df = pd.DataFrame({
+#         'Chr': chrs,  # Chromosomes or tools
+#         'Complete Agreement': [AN_ID_inter_check["complete_agreement"], SN_ID_inter_check["complete_agreement"], VP_ID_inter_check["complete_agreement"],
+#         'Partial Agreement': [AN_ID_inter_check["complete_agreement"], sn_data[1], vp_data[1]],
+#         'No Agreement': [AN_ID_inter_check["complete_agreement"], sn_data[2], vp_data[2]],
+#         'Snp_Annotation_rate': [AN_ID_inter_check["complete_agreement"], sn_data[3], vp_data[3]]
+#     })
+#     
+#     print(df)
+# =============================================================================
     
     """ RESULTS FILE CREATION """
 
-    save_processed_file(file_path, results)
+    #save_processed_file(file_path, results)
 
     """  HYPOTHESIS TESTING  """
 
@@ -385,16 +387,21 @@ def main():
     VP = {key: VP_ID_genic_check[key] + VP_ID_inter_check[key] for key in VP_ID_genic_check}
         
     
-    """ SUMMARY FILE CREATION """
-    # Summary results
-    l_1 = "For Chromosome: " + chr[1] + "/n"
-    l_2 = "There are: %i" % size + " SNPs/n/n"
-    l_3 = f"The agreement between all tools is: {tool_agreement_tog}"
+# =============================================================================
+#     """ SUMMARY FILE CREATION """
+#     # Summary results
+#     l_1 = "For Chromosome: " + chr[1] + "/n"
+#     l_2 = "There are: %i" % size + " SNPs/n/n"
+#     l_3 = f"The agreement between all tools is: {tool_agreement_tog}"
+# 
+# 
+#     
+#     # Creating a .txt file with the summary results
+#     summary_filename = filename_1[0]+"_summary."+filename_1[1]
+#     f = open("/home1/queme/AnnoQ/processed_hrc_12_2019/"+summary_filename,"w+")
+#     f.writelines([l_1, l_8, l_9, l_10, l_11, l_12, l_2, l_3, l_4, l_5, l_6, l_7])
+#     f.close()
+# =============================================================================
 
-
-    
-    # Creating a .txt file with the summary results
-    summary_filename = filename_1[0]+"_summary."+filename_1[1]
-    f = open("/home1/queme/AnnoQ/processed_hrc_12_2019/"+summary_filename,"w+")
-    f.writelines([l_1, l_8, l_9, l_10, l_11, l_12, l_2, l_3, l_4, l_5, l_6, l_7])
-    f.close()
+if __name__ == "__main__":
+    main()
