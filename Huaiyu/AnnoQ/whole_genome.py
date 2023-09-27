@@ -269,7 +269,7 @@ def main():
 
     # Reading file
    # file_path = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
-    cdata = load_data("C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\X.annotated.snp.gz")
+    cdata = load_data("C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\20.annotated.snp.gz")
 #    cdata = load_data("C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\Code\\Test_data\\Test_data_set2.txt.gz")
     
     # Selecting data
