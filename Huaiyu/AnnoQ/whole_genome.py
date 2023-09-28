@@ -343,8 +343,8 @@ def main():
     df_inter_sorted, df_genic_sorted = process_all_files()
     
     # Save them to CSV
-    df_inter_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\inter_results.csv', index=False)
-    df_genic_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\genic_results.csv', index=False)
+    df_inter_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\inter_results.csv', index=False)
+    df_genic_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\genic_results.csv', index=False)
 
     # End the timer and calculate elapsed time
     elapsed_time = time.time() - start_time
