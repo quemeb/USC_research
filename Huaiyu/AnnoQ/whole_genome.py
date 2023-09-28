@@ -12,15 +12,6 @@ def load_data(file_path):
     df = pd.read_csv(file_path, usecols=columns_needed, delimiter="\t", dtype= object, compression='gzip')
     return df
 
-def process_data(data):
-    pass
-
-def summarize_data(summary_data):
-    pass
-
-def write_sumary_to_file(summary_data):
-    pass 
-
 # Eliminating repeats
 def no_repeats(nparray):
     return [np.unique(arr) for arr in nparray]
@@ -28,19 +19,6 @@ def no_repeats(nparray):
 # Mining gene ID
 def extract(lists):
     return[pattern.findall(lst) for lst in lists]
-
-# Looking for differences
-def difference(array1,array2):
-    return [np.setdiff1d(arr1, arr2, assume_unique=True) for arr1, arr2 in zip(array1, array2)]
-
-# Intercepts
-def inter(array1,array2):
-    return [np.intersect1d(arr1, arr2, assume_unique=True) for arr1, arr2 in zip(array1, array2)]
-
-# Counting
-def counter(arrays):
-    return sum(1 for arr in arrays if arr.size > 0)
-
 
 def annotation_agreement_rate(uni_clean, AN, SN, VP):
     # Initialize a dictionary to store various counts.
@@ -108,60 +86,6 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
             counters['none_agree'] += 1
 
     return counters  # Return the counters dictionary.
-
-
-def save_processed_file(filename, results, output_directory="/home1/queme/AnnoQ/processed_hrc_12_2019/"):
-    """
-    Saves the processed results to a new file.
-
-    Parameters:
-    - filename: str
-        The original filename.
-    - results: pd.DataFrame
-        The processed results to be saved.
-    - output_directory: str, optional
-        The directory where the processed file will be saved. Default is "/home1/queme/AnnoQ/processed_hrc_12_2019/"
-    - Example usage
-        save_processed_file("your/original/filename.txt", results_dataframe)
-    """
-    
-    # Extracting the base filename and extension
-    base_filename = filename.split("/")[-1]
-    name_parts = base_filename.split(".")
-    
-    # Creating the processed filename
-    result_filename = f"{name_parts[0]}_processed.{name_parts[1]}"
-    
-    # Saving the results to a .txt file
-    output_path = f"{output_directory}{result_filename}"
-    results.to_csv(path_or_buf=output_path, sep="/t", index=False)
-
-def create_summary_file(chr, size, all_agree, two_agree, AN_agree_2, SN_agree_2, VP_agree_2, one_agree, AN_agree_1, SN_agree_1, VP_agree_1, filename_1):
-    """Create and save a summary file."""
-    
-    summary_lines = [
-        f"For Chromosome: {chr[1]}/n",
-        f"There are: {size} SNPs/n/n",
-        f"All tools agree with all GeneIDs: {all_agree} ({all_agree/size*100:.2f}%)/n",
-        f"""At least two tools agree with all GeneIDs: {two_agree} ({two_agree/size*100:.2f}%)
-          /t - Annovar: {AN_agree_2}/n
-          /t - SnpEff: {SN_agree_2}/n
-          /t - VEP: {VP_agree_2}/n""",
-        f"""At least one tool agrees with all GeneIDs: {one_agree} ({one_agree/size*100:.2f}%)
-          /t - Annovar: {AN_agree_1}/n
-          /t - SnpEff: {SN_agree_1}/n
-          /t - VEP: {VP_agree_1}/n"""
-    ]
-    
-    summary_filename = f"{filename_1[0]}_summary.{filename_1[1]}"
-    output_path = f"/home1/queme/AnnoQ/processed_hrc_12_2019/{summary_filename}"
-    
-    with open(output_path, "w+") as f:
-        f.writelines(summary_lines)
-
-# Example usage
-#create_summary_file(chr, size, all_agree, two_agree, AN_agree_2, SN_agree_2, VP_agree_2, one_agree, AN_agree_1, SN_agree_1, VP_agree_1, filename_1)
-
 
 def annotation_single_to_master(test, master):
     
@@ -235,7 +159,6 @@ def annotation_single_to_master(test, master):
     partial_agreement,
     no_agreement)
 
-
 def run_and_store_results(func, args, output_names):
     """
     Runs a function with given arguments and stores its multiple outputs in a dictionary.
@@ -262,14 +185,35 @@ def run_and_store_results(func, args, output_names):
     
     return result_dict
 
+def data_summary(tool_agreement, S, A, V, chrs, sizes):
+    dictionary = {"Chr": chrs, 
+                "SAP" :tool_agreement['all_agree'], 
+                "SA": tool_agreement['SA'], 
+                "SV":tool_agreement['SV'], 
+                "AV":tool_agreement['AV'], 
+                "S":tool_agreement['S'],
+                "A":tool_agreement['A'], 
+                "V":tool_agreement['V'], 
+                "None":tool_agreement['none_agree'], 
+                "Total SNPs":sizes,
+                "S_partial": S['partial_agreement'],
+                "A_partial": A['partial_agreement'],
+                "V_partial": V['partial_agreement'],
+                "S_no_agreement": S['no_agreement'],
+                "A_no_agreement": A['no_agreement'],
+                "V_no_agreement": V['no_agreement'],
+                "S_rate": S["snp_annotation_rate"],
+                "A_rate": A["snp_annotation_rate"],
+                "V_rate": V["snp_annotation_rate"],
+                }
+    return dictionary 
 
 
-
-def main():
+def data_process():
 
     # Reading file
    # file_path = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
-    cdata = load_data("C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\20.annotated.snp.gz")
+    cdata = load_data("C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\18.annotated.snp.gz")
 #    cdata = load_data("C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\Code\\Test_data\\Test_data_set2.txt.gz")
     
     # Selecting data
@@ -290,12 +234,12 @@ def main():
     AN_ID_genic = [gene_id for gene_id in AN_ID_genic if not gene_id.startswith('.')]
     AN_ID_intergenic = [gene_id for gene_id in AN_ID_intergenic if not gene_id.startswith('.')]
     
-    # Extracting info from file
+    # # Extracting info from file
     chrs = cdata["chr"] # chromosome number
-    pos = cdata["pos"] # SNP position
-    ref = cdata["ref"] # reference
-    alt = cdata["alt"] # mutation
-    rs = cdata["rs_dbSNP151"] # rs ID
+    # pos = cdata["pos"] # SNP position
+    # ref = cdata["ref"] # reference
+    # alt = cdata["alt"] # mutation
+    # rs = cdata["rs_dbSNP151"] # rs ID
 
 
     """ Extracting Gene IDs"""
@@ -347,61 +291,17 @@ def main():
     SN_ID_genic_check = run_and_store_results(annotation_single_to_master, (SN_ID_genic, united_unique_genic), output_names)
     VP_ID_genic_check = run_and_store_results(annotation_single_to_master, (VP_ID_genic, united_unique_genic), output_names)
 
-    
-    
-    """ Giving table """
-    # Creating results table
-    #column_names = ["Chr", "Position", "Ref", "Alt", "rs ID", "Gene_IDs", "ANNOVAR", "SnpEff", "VEP"]
-    #data_values = [chrs, pos, ref, alt, rs, unique_clean, AN_ID_check, SN_ID_check, VP_ID_check]
-    
-    #results = pd.DataFrame({col: val for col, val in zip(column_names, data_values)})
-
-# =============================================================================
-#     # Creating a DataFrame
-#     df = pd.DataFrame({
-#         'Chr': chrs,  # Chromosomes or tools
-#         'Complete Agreement': [AN_ID_inter_check["complete_agreement"], SN_ID_inter_check["complete_agreement"], VP_ID_inter_check["complete_agreement"],
-#         'Partial Agreement': [AN_ID_inter_check["complete_agreement"], sn_data[1], vp_data[1]],
-#         'No Agreement': [AN_ID_inter_check["complete_agreement"], sn_data[2], vp_data[2]],
-#         'Snp_Annotation_rate': [AN_ID_inter_check["complete_agreement"], sn_data[3], vp_data[3]]
-#     })
-#     
-#     print(df)
-# =============================================================================
-    
-    """ RESULTS FILE CREATION """
-
-    #save_processed_file(file_path, results)
 
     """  HYPOTHESIS TESTING  """
 
     tool_agreement_intergenic = annotation_agreement_rate(united_unique_inter, AN_ID_inter, SN_ID_inter, VP_ID_inter)
     tool_agreement_genetic = annotation_agreement_rate(united_unique_genic, AN_ID_genic, SN_ID_genic, VP_ID_genic)
     
+    # Summary returns
+    inter_summary = data_summary(tool_agreement_intergenic, SN_ID_inter_check, AN_ID_inter_check, VP_ID_inter_check, chrs[1], size_inter)
+    genic_summary = data_summary(tool_agreement_genetic, SN_ID_genic_check, AN_ID_genic_check, VP_ID_genic_check, chrs[1], size_genic)
     
-        # Add dictionaries
-    sum_dict = {key: tool_agreement_intergenic[key] + tool_agreement_genetic[key] for key in tool_agreement_intergenic}
-    
-    SN = {key: SN_ID_genic_check[key] + SN_ID_inter_check[key] for key in SN_ID_genic_check}
-    AN = {key: AN_ID_genic_check[key] + AN_ID_inter_check[key] for key in AN_ID_genic_check}
-    VP = {key: VP_ID_genic_check[key] + VP_ID_inter_check[key] for key in VP_ID_genic_check}
-        
-    
-# =============================================================================
-#     """ SUMMARY FILE CREATION """
-#     # Summary results
-#     l_1 = "For Chromosome: " + chr[1] + "/n"
-#     l_2 = "There are: %i" % size + " SNPs/n/n"
-#     l_3 = f"The agreement between all tools is: {tool_agreement_tog}"
-# 
-# 
-#     
-#     # Creating a .txt file with the summary results
-#     summary_filename = filename_1[0]+"_summary."+filename_1[1]
-#     f = open("/home1/queme/AnnoQ/processed_hrc_12_2019/"+summary_filename,"w+")
-#     f.writelines([l_1, l_8, l_9, l_10, l_11, l_12, l_2, l_3, l_4, l_5, l_6, l_7])
-#     f.close()
-# =============================================================================
+    return inter_summary, genic_summary
 
 if __name__ == "__main__":
     main()
