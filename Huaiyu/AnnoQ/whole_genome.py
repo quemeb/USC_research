@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 import re
+import glob 
 
 """ FUNCTIONS """
 # Precompile the regular expression
@@ -209,7 +210,7 @@ def data_summary(tool_agreement, S, A, V, chrs, sizes):
     return dictionary 
 
 
-def data_process():
+def data_process(file):
 
     # Reading file
    # file_path = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
@@ -303,5 +304,47 @@ def data_process():
     
     return inter_summary, genic_summary
 
+
+
+def process_all_files():
+    path = "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\*.gz"
+    
+    # Step 1: Create empty dictionaries for accumulation
+    all_data1 = {}
+    all_data2 = {}
+    
+    for filename in glob.glob(path):
+        inter, genic = data_process(filename)
+        
+        # Assuming the chromosome is the key and the data_summary dictionary is the value
+        # Update the accumulated dictionaries with new data
+        all_data1[inter["Chr"]] = inter
+        all_data2[genic["Chr"]] = genic
+        
+    # Step 3: Convert dictionaries to pandas DataFrame
+    df_inter = pd.DataFrame(all_data1).T  # Transpose because keys are chromosomes and values are another dictionary
+    df_genic = pd.DataFrame(all_data2).T  # Same reason for Transpose
+    
+    # Assuming the chromosome numbers are stored in a column named 'Chr', sort by this column
+    df_inter_sorted = df_inter.sort_values(by='Chr')
+    df_genic_sorted = df_genic.sort_values(by='Chr')
+    
+    return df_inter_sorted, df_genic_sorted
+
+
+def main():
+    # Process all files and get the sorted dataframes
+    df_inter_sorted, df_genic_sorted = process_all_files()
+
+    # Save them to CSV
+    df_inter_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\inter_results.csv', index=False)
+    df_genic_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\genic_results.csv', index=False)
+
+    print("Files saved successfully!")
+
+# This block ensures that the main function is called only when the script is run directly, 
+# and not if it's imported as a module in another script.
 if __name__ == "__main__":
     main()
+
+
