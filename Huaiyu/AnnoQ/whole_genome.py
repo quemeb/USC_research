@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import re
 import glob 
+import time 
 
 """ FUNCTIONS """
 # Precompile the regular expression
@@ -87,6 +88,7 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
             counters['none_agree'] += 1
 
     return counters  # Return the counters dictionary.
+
 
 def annotation_single_to_master(test, master):
     
@@ -214,7 +216,7 @@ def data_process(file):
 
     # Reading file
    # file_path = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
-    cdata = load_data("C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\18.annotated.snp.gz")
+    cdata = load_data(file)
 #    cdata = load_data("C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\Code\\Test_data\\Test_data_set2.txt.gz")
     
     # Selecting data
@@ -314,6 +316,7 @@ def process_all_files():
     all_data2 = {}
     
     for filename in glob.glob(path):
+        print(f"Processing file: {filename}")  # Print the current filename
         inter, genic = data_process(filename)
         
         # Assuming the chromosome is the key and the data_summary dictionary is the value
@@ -333,14 +336,21 @@ def process_all_files():
 
 
 def main():
+    # Start the timer
+    start_time = time.time()
+
     # Process all files and get the sorted dataframes
     df_inter_sorted, df_genic_sorted = process_all_files()
-
+    
     # Save them to CSV
     df_inter_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\inter_results.csv', index=False)
     df_genic_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\genic_results.csv', index=False)
 
+    # End the timer and calculate elapsed time
+    elapsed_time = time.time() - start_time
+
     print("Files saved successfully!")
+    print(f"Total time elapsed: {elapsed_time:.2f} seconds")
 
 # This block ensures that the main function is called only when the script is run directly, 
 # and not if it's imported as a module in another script.
