@@ -494,6 +494,13 @@ estat clas, cut(.13861314)
 
 
 
+logit mental_cat region01 _v3 ib3._v1 well_cat cov_effect height_cm cov_contact sex01 log_cov_fear log_cov_psych ageyears cov_burden c.wfh c.religion01 
+
+estat classification
+lroc 
+lsens
+predict p
+cutpt mental_cat p
 
 
 **# --------------------------- RESILIENCE MODEL ------------------------------
