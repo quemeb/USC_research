@@ -15,7 +15,7 @@ if (!requireNamespace("AnnoQR", quietly = TRUE)) {
   # Load devtools
   library(devtools)
   # Install AnnoQR from GitHub
-  install_github("quemeb/AnnoQR")
+  install_github("USCbiostats/AnnoQR")
 }
 
 # Load AnnoQR
