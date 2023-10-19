@@ -58,15 +58,9 @@ drop if missing(res)
 // we will use our score because they are different 
 drop resilience a156 a157 a158 a159 a160 a161 
 * Generating Ordinal Resilience 
-gen res_cat = .
-replace res_cat = 0 if res < 3.167 - .485713
-replace res_cat = 1 if res >= 3.167 - .485713 & res != .
-replace res_cat = 2 if res >= 3.167 + .485713 & res != .
-
-*gen res_cat = 0
-*replace res_cat = 1 if res >= 3 
-*replace res_cat = 2 if res >= 4.31
-*now we want to create labels
+gen res_cat = 0
+replace res_cat = 1 if res >= 3 
+replace res_cat = 2 if res >= 4.31
 *now we want to create labels
 label variable res_cat "Resilience Categories" 
 label define res_catf 0 "Low Resilience(1.00-2.99)" 1 "Normal Resilience(3.00-4.30)" 2 "High Resilience(4.31-5.00)" 
@@ -165,11 +159,8 @@ label values res_cat res_catf1
 
 * ---------- LINEARITY CHECK
 
-* height_cm - cosine 
-*fp <height_cm>, scale center replace: logit res_cat <height_cm> 
-gen height_cm_cos = cos(height_cm)
-*fp <height_cm_cos>, scale center replace: logit res_cat <height_cm_cos> 
-drop height_cm
+* height_cm - linear 
+fp <height_cm>, scale center replace: logit res_cat <height_cm> 
 
 * weight_kg - linear 
 //lowess mental_cat weight_kg, logit
@@ -190,7 +181,7 @@ drop cov_effect
 * cov_fear - cos(2.5x)
 //lowess res_cat cov_fear, logit 
 //fp <cov_fear>, scale center replace: logit res_cat <cov_fear>
-gen cov_fear_cos = cos(cov_fear)
+gen cov_fear_cos = cos(2.5*cov_fear)
 //fp <cov_fear_cos>, scale center replace: logit res_cat <cov_fear_cos>
 drop cov_fear
 
@@ -307,23 +298,25 @@ foreach var in $leftover_cat {
 di "$leftover_cat_expanded"
 
 * ---------- Final stepwise 
-sw, pr(0.1): logit res_cat i.region01 i.weightchangeoverthepast6months01 i.religion01 i.insu $leftover_cat_expanded $leftover_cont, nolog or 
+sw, pr(0.1): logit res_cat cov_fear_cos $leftover_cat_expanded $leftover_cont, nolog or 
+
+// dropping cov_contact since it is not statistically signfincant in the exploratory model at p =0.1 
 
 * ---------- Preliminary model after stepwises 
-logit res_cat i.religion01 cov_effect_cos i.weightchangeoverthepast6months01 i.insu, nolog or 
+logit res_cat cov_fear_cos i.region01 ib2.race01, nolog or 
 
 
 
 * --- prelim final model
 
-logit res_cat cov_effect_cos i.religion01 i.weightchangeoverthepast6months01 i.insu, nolog or 
+logit res_cat cov_fear_cos i.region01 ib2.race01, nolog or 
 
 *# _______________________ INTERACTIONS ___________________________ 
 // no interactions were found 
-*global potential_interactions "c.ageyears c.sex01 race01"
+*global potential_interactions "c.ageyears c.sex01"
 
 *foreach i in $potential_interactions {
-*	logit res_cat c.cov_effect_cos##`i' i.religion01##`i' i.weightchangeoverthepast6months01##`i' i.insu##`i', nolog or 
+*	logit res_cat c.cov_fear_cos##`i' region01##`i' ib2.race01##`i', nolog or 
 *}
 
 *# ______________ CONFOUNDERS ____________________
@@ -357,25 +350,16 @@ logit res_cat cov_effect_cos i.religion01 i.weightchangeoverthepast6months01 i.i
 *}
 *di "$confounders_cont"
 
-logit res_cat cov_effect_cos i.religion01 i.weightchangeoverthepast6months01 i.insu ageyears, nolog or
+logit res_cat cov_fear_cos i.region01 ib2.race01, nolog or 
 
-test 4.insu == 10.insu
-gen insu_full = 0
-replace insu_full = 1 if insu == 2
-replace insu_full = 2 if insu == 4 | insu == 10
-label variable insu_full "Combined insurances" 
-label define insu_fullf 0 "no insurance" 1 "Partial" 2 "Full Public/Private"
-label values insu_full insu_fullf 
 
-*ageyears was a confounder and made cos pshy not stat sig
 **# * ------------------ FINAL MENTAL MODEL --------------------
-
-logit res_cat ib7.religion01 i.insu_full ageyears, nolog or
+logit res_cat cov_fear_cos i.region01 ib2.race01, nolog or 
 
 
 * ----------------- Model diagnostics ----------------------
 
-estat gof, group(10) table 
+estat gof, group(4) table 
 // doesn't depart from goodness
 
 predict predicted, p
@@ -417,13 +401,15 @@ twoway scatter delta_x2 p [aweight = delta_beta], msymbol(circle_hollow)
 
 * ---------------- Predictions ---------------------------
 
+logit res_cat cov_fear_cos i.region01 ib2.race01, nolog or 
+
 estat classification
 lroc 
 lsens
 predict p
 cutpt res_cat p
 
-
-estat clas, cut(.20687228)
+logit res_cat cov_fear_cos i.region01 ib2.race01, nolog or 
+estat clas, cut(.03744664)
 
 

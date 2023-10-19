@@ -27,7 +27,8 @@ long_format_total <- function(df) {
     Tool = factor(rep(c("SnpEff", "Annovar", "VEP"), each = nrow(df))),
     Chromosome = df$Chr,  # Assuming df has a Chrom column
     log_Annotations = log(c(df$S_total, df$A_total, df$V_total)),
-    root_Annotations = sqrt(c(df$S_total, df$A_total, df$V_total))
+    root_Annotations = sqrt(c(df$S_total, df$A_total, df$V_total)),
+    rate_Annotations = c(df$S_rate, df$A_rate, df$V_rate)
   )
   return(df_long)
 }
@@ -60,6 +61,23 @@ bar_raw <- function(df, title){
   labs(title=title, x="Chromosome", y="Number of Annotations") +
   scale_fill_manual(values = c("#00AFBB", "#E7B800", "#FC4E07"))  
 }
+
+box_rate <- function(df, title) {
+  ggplot(df, aes(x = Tool, y = rate_Annotations, fill=Tool)) +
+  geom_boxplot() +
+  scale_y_continuous(labels = scientific) +
+  scale_fill_manual(values = c("#00AFBB", "#E7B800", "#FC4E07")) +
+  labs(title = title, x = "Tool", y = "Annotations")
+}
+
+bar_rate <- function(df, title){
+  ggplot(df, aes(x = Chromosome, y = rate_Annotations, fill = Tool)) + 
+  geom_bar(stat="identity", position="dodge") +
+  scale_y_continuous(labels = scientific) +
+  labs(title=title, x="Chromosome", y="Number of Annotations") +
+  scale_fill_manual(values = c("#00AFBB", "#E7B800", "#FC4E07"))  
+}
+
 
 raw_normality <- function(df){
   for(tool in unique(df$Tool)) {
@@ -137,15 +155,83 @@ rmanova <- function(df){
       ))
 }
 
+rmanova_sq <- function(df){
+    print(df %>%
+    group_by(Tool) %>%
+    get_summary_stats(root_Annotations, type = "mean_sd"))
+  
+  print(ggboxplot(df, x="Chromosome", y = "root_Annotations", add = "point"))
+  
+  print(df %>%
+    group_by(Tool)%>%
+    identify_outliers(root_Annotations))
+  
+  print(df %>%
+    group_by(Tool) %>%
+    shapiro_test(root_Annotations))
+  
+  print(ggqqplot(df, "root_Annotations", facet.by = "Tool"))
+  
+  print(anova_test(data = df, dv = root_Annotations, wid = Chromosome, within = Tool))
+
+  
+  print(ezANOVA(data = df, 
+                   dv = .(root_Annotations), 
+                   wid = .(Chromosome), 
+                   within = .(Tool), 
+                   detailed = TRUE))
+  
+  print(df %>%
+    pairwise_t_test(
+      root_Annotations ~ Tool, paired = TRUE,
+      p.adjust.method = "bonferroni",
+      detailed = TRUE
+      ))
+}
+
+rmanova_rate <- function(df){
+    print(df %>%
+    group_by(Tool) %>%
+    get_summary_stats(rate_Annotations, type = "mean_sd"))
+  
+  print(ggboxplot(df, x="Chromosome", y = "rate_Annotations", add = "point"))
+  
+  print(df %>%
+    group_by(Tool)%>%
+    identify_outliers(rate_Annotations))
+  
+  print(df %>%
+    group_by(Tool) %>%
+    shapiro_test(rate_Annotations))
+  
+  print(ggqqplot(df, "rate_Annotations", facet.by = "Tool"))
+  
+  print(anova_test(data = df, dv = rate_Annotations, wid = Chromosome, within = Tool))
+
+  
+  print(ezANOVA(data = df, 
+                   dv = .(rate_Annotations), 
+                   wid = .(Chromosome), 
+                   within = .(Tool), 
+                   detailed = TRUE))
+  
+  print(df %>%
+    pairwise_t_test(
+      rate_Annotations ~ Tool, paired = TRUE,
+      p.adjust.method = "bonferroni",
+      detailed = TRUE
+      ))
+}
+
 ```
 
 
 ```{r}
-genic_file <- "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\genic_results.csv"
+genic_file <- "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Huaiyu Mi\\AnnoQ\\genic_results.csv"
 #genic_file <- "genic_results.csv"
 genic <- read.csv(genic_file)
 
-inter_file <- "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\inter_results.csv"
+inter_file <- "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Huaiyu Mi\\AnnoQ\\inter_results.csv"
 #inter_file <- "inter_results.csv"
 inter <- read.csv(inter_file)
 
@@ -195,8 +281,8 @@ inter_total_long <- long_format_total(inter)
 inter_genic_total_long <- long_format_total(inter_genic)
 
 genic_total_partial_long <- long_format_total_partial(genic)
-inter_total_partial_long <- long_format_total(inter)
-inter_genic_total_partial_long <- long_format_total(inter_genic)
+inter_total_partial_long <- long_format_total_partial(inter)
+inter_genic_total_partial_long <- long_format_total_partial(inter_genic)
 
 ```
 
@@ -320,6 +406,82 @@ print(combined_plots)
 ```{r}
 rmanova(inter_genic_total_partial_long)
 ```
+
+```{r}
+rmanova(genic_total_partial_long)
+```
+
+```{r}
+rmanova(inter_total_partial_long)
+```
+
+## Graphing rates
+
+```{r}
+genic_total_long$Chromosome <- factor(genic_total_long$Chromosome, levels = c(as.character(1:22), "X"))
+inter_total_long$Chromosome <- factor(genic_total_long$Chromosome, levels = c(as.character(1:22), "X"))
+inter_genic_total_long$Chromosome <- factor(genic_total_long$Chromosome, levels = c(as.character(1:22), "X"))
+
+genic_boxplot <- box_rate(genic_total_long, "Genic Region by Tool") + 
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none") #axis.text.y = element_blank()
+
+inter_boxplot <- box_rate(inter_total_long, "Intergenic Region by Tool")+ 
+    theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none")
+
+inter_genic_boxplot <- box_rate(inter_genic_total_long, "Whole Genome by Tool") +
+    theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none")
+
+genic_plot  <- bar_rate(genic_total_long, "Genic Region by Chromosome")+   
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none",
+        axis.text.y = element_blank())
+
+inter_plot  <- bar_rate(inter_total_long, "Intergenic Region by Chromosome") + 
+    theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none",
+        axis.text.y = element_blank())
+
+inter_genic_plot <- bar_rate(inter_genic_total_long, "Whole Genome by Chromosome") + 
+    theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none",
+        axis.text.y = element_blank())
+
+# Arrange in 3x2 layout using patchwork
+combined_plots <- (inter_genic_boxplot | inter_genic_plot) / 
+                  (genic_boxplot | genic_plot) /
+                  (inter_boxplot | inter_plot) 
+
+print(combined_plots)
+
+#ggsave("combined_plots.png", combined_plots, width = 10, height = 8, dpi = 300)
+```
+
+```{r}
+rmanova_sq(inter_total_partial_long)
+```
+
+```{r}
+rmanova_rate(inter_genic_total_long)
+```
+
+```{r}
+rmanova_rate(genic_total_long)
+```
+
+```{r}
+rmanova_rate(inter_total_long)
+```
+
+
 
 
 

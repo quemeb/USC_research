@@ -50,17 +50,22 @@ drop _v2 // regrouped
 
 *------------------ RESILIENCE  
 
-gen res = (a156 + a157 + a158 + a159 + a160 + a161)/6
+egen res = rowmean(a156 a157 a158 a159 a160 a161)
 codebook res 
 drop if missing(res)
-*ttest res == resilience, unpaired // comparing to V's score
-*hist res, frequency normal title("Distribution of Resilience Score")
+hist res, frequency normal title("Distribution of Resilience Score")
 // we will use our score because they are different 
 drop resilience a156 a157 a158 a159 a160 a161 
 * Generating Ordinal Resilience 
-gen res_cat = 0
-replace res_cat = 1 if res >= 3 
-replace res_cat = 2 if res >= 4.31
+
+gen res_cat = .
+replace res_cat = 0 if res < 3.167 - .485713
+replace res_cat = 1 if res >= 3.167 - .485713 & res != .
+replace res_cat = 2 if res >= 3.167 + .485713 & res != .
+
+*gen res_cat = 0
+*replace res_cat = 1 if res >= 3 
+*replace res_cat = 2 if res >= 4.31
 *now we want to create labels
 label variable res_cat "Resilience Categories" 
 label define res_catf 0 "Low Resilience(1.00-2.99)" 1 "Normal Resilience(3.00-4.30)" 2 "High Resilience(4.31-5.00)" 

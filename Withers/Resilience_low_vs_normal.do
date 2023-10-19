@@ -58,9 +58,15 @@ drop if missing(res)
 // we will use our score because they are different 
 drop resilience a156 a157 a158 a159 a160 a161 
 * Generating Ordinal Resilience 
-gen res_cat = 0
-replace res_cat = 1 if res >= 3 
-replace res_cat = 2 if res >= 4.31
+
+gen res_cat = .
+replace res_cat = 0 if res < 3.167 - .485713
+replace res_cat = 1 if res >= 3.167 - .485713 & res != .
+replace res_cat = 2 if res >= 3.167 + .485713 & res != .
+
+*gen res_cat = 0
+*replace res_cat = 1 if res >= 3 
+*replace res_cat = 2 if res >= 4.31
 *now we want to create labels
 label variable res_cat "Resilience Categories" 
 label define res_catf 0 "Low Resilience(1.00-2.99)" 1 "Normal Resilience(3.00-4.30)" 2 "High Resilience(4.31-5.00)" 
@@ -94,11 +100,11 @@ drop covid_psych a173 a177 a178 a179 a181 a182 a183 a184 a185 a186
 
 *generate wellbeing
 gen cov_wellbeing = a211 + a212 + a213 + a214 + a215
-codebook cov_wellbeing
-codebook wellbeing
+*codebook cov_wellbeing
+*codebook wellbeing
 //hist cov_wellbeing, frequency normal title ("dist of cov_wellbeing")
 //hist wellbeing, frequency normal title("Distribution of wellbeing")
-signrank cov_wellbeing=wellbeing 
+*signrank cov_wellbeing=wellbeing 
 *make categories
 gen well_cat = 0 if cov_wellbeing < 17.5
 replace well_cat = 1 if cov_wellbeing >= 17.5 
@@ -197,10 +203,6 @@ drop cov_effect
 * cov_contact - log 
 //lowess res_cat cov_contact, logit 
 //fp <cov_contact>, scale center replace: logit res_cat <cov_contact>
-gen log_cov_contact = log(cov_contact)
-//lowess res_cat log_cov_contact, logit 
-//fp <log_cov_contact>, scale center replace: logit res_cat <log_cov_contact>
-drop cov_contact 
 
 vl rebuild 
 
@@ -241,7 +243,7 @@ display "The removed categorical variables are: $leftover_cat"
 
 
 * ---- Continouos ---
-global cont_variables "$vlcontinuous age_cosine cov_effect_cos log_cov_contact"
+global cont_variables "$vlcontinuous age_cosine cov_effect_cos"
 global cont_prelim ""
 
 foreach i in $cont_variables{
@@ -296,60 +298,72 @@ foreach var in $leftover_cat {
 di "$leftover_cat_expanded"
 
 * ---------- Final stepwise 
-sw, pr(0.1): logit res_cat cov_burden cov_psych log_cov_contact sex01 $leftover_cat_expanded $leftover_cont, nolog or 
+sw, pr(0.1): logit res_cat cov_burden i.race01 i._v1 cov_psych $leftover_cat_expanded $leftover_cont, nolog or 
 // 
 
 * ---------- Preliminary model after stepwises 
-logit res_cat log_cov_contact cov_burden cov_psych i._v3 ib2.sex01, nolog or 
+logit res_cat cov_burden i.race i.livingstatus01 height_cm cov_psych i.weightchangeoverthepast6months01, nolog or 
 
 
 * --- prelim final model
-
-logit res_cat log_cov_contact cov_burden cov_psych i._v3 ib2.sex01, nolog or 
+logit res_cat cov_burden height_cm cov_psych i.race i.livingstatus01 i.weightchangeoverthepast6months01, nolog or
 
 *# _______________________ INTERACTIONS ___________________________ 
 // no interactions were found 
-*global potential_interactions "c.age_cosine race01"
+*global potential_interactions "c.age_cosine sex01"
 
 *foreach i in $potential_interactions {
-*	logit res_cat c.log_cov_contact##`i' c.cov_burden##`i' c.cov_psych##`i' c._v3##`i' c.sex01##`i', nolog or 
+*	logit res_cat c.cov_burden##`i' c.height_cm##`i' c.cov_psych##`i' i.race##`i' i.livingstatus01##`i' i.weightchangeoverthepast6months01##`i', nolog or 
 *}
 
 *# ______________ CONFOUNDERS ____________________
 
 // Define a macro for potential confounders
-global potential_confounders "age_cosine i.race01"
-global confounders_cont ""
+*global potential_confounders "c.age_cosine sex01"
+*global confounders_cont ""
 
 // Loop through each main independent variable and each potential confounder
-foreach main in log_cov_contact cov_burden cov_psych _v3 sex01 {
-    foreach conf in $potential_confounders {
-        di "Testing for confounding effect of `conf' on `main'..."
+*foreach main in cov_burden height_cm cov_psych {
+*    foreach conf in $potential_confounders {
+ *       di "Testing for confounding effect of `conf' on `main'..."
 
-        // Run the logistic regression model without the confounder
-        logit res_cat `main'
-        // Store the coefficient for the main variable
-        scalar b1 = _b[`main']
+  *      // Run the logistic regression model without the confounder
+   *     logit res_cat `main'
+    *    // Store the coefficient for the main variable
+     *   scalar b1 = _b[`main']
 
         // Run the logistic regression model with the confounder
-        logit res_cat `main' `conf'
+*        logit res_cat `main' `conf'
         // Store the coefficient for the main variable
-        scalar b2 = _b[`main']
+*        scalar b2 = _b[`main']
 
         // Calculate the percentage change in the coefficient
-       scalar perc_change = 100 * (b2 - b1) / b1
-         di "Percent change in coefficient for `main' when including `conf': " float(perc_change) "%"
-		if (abs(perc_change) > 10){
-			global confounders_cont "$confounders_cont `conf'"
-		}
-    }
-}
-di "$confounders_cont"
+*       scalar perc_change = 100 * (b2 - b1) / b1
+*         di "Percent change in coefficient for `main' when including `conf': " float(perc_change) "%"
+*		if (abs(perc_change) > 10){
+*			global confounders_cont "$confounders_cont `conf'"
+*		}
+*    }
+*}
+*di "$confounders_cont"
 
+*sex01 showed that height was not stat sig, both dropped, diagnostics improved
+*race not stat sig nor confounding
 
 **# * ------------------ FINAL MENTAL MODEL --------------------
-logit res_cat log_cov_contact cov_burden cov_psych i._v3 ib2.sex01 i.race, nolog or 
+logit res_cat cov_burden cov_psych i.livingstatus01 ib3.weightchangeoverthepast6months01, nolog or
 
+
+test 1.weightchangeoverthepast6months01 == 2.weightchangeoverthepast6months01
+gen weight_change = .
+replace weight_change = 0 if weightchangeoverthepast6months01 == 3
+replace weight_change = 1 if weightchangeoverthepast6months01 == 1 | weightchangeoverthepast6months01 == 2
+replace weight_change = 2 if weightchangeoverthepast6months01 == 4 
+label variable weight_change "Combined Weights" 
+label define weight_changef 0 "Stayed the same" 1 "Increased/decreased" 2 "Don't know'"
+label values weight_change weight_changef 
+
+logit res_cat cov_burden cov_psych i.livingstatus01 i.weight_change, nolog or
 
 * ----------------- Model diagnostics ----------------------
 
@@ -395,10 +409,7 @@ twoway scatter delta_x2 p [aweight = delta_beta], msymbol(circle_hollow)
 
 * ---------------- Predictions ---------------------------
 
-logit res_cat log_cov_contact cov_burden cov_psych i._v3 ib2.sex01 i.race, nolog or 
 
-* FINAL FINAL MODEL AFTER SENSITIVITY 
-logit res_cat log_cov_contact cov_burden cov_psych i._v3 ib2.sex01 i.race, nolog or
 
 estat classification
 lroc 
@@ -407,6 +418,6 @@ predict p
 cutpt res_cat p
 
 logit res_cat log_cov_contact cov_burden cov_psych i.sex01 i.residence01 i.race01, nolog or
-estat clas, cut(.25500867)
+estat clas, cut(.16782232)
 
 

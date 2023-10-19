@@ -9,42 +9,45 @@
 
 library(shiny)
 
-# Define UI for application that draws a histogram
+library(shiny)
+
 ui <- fluidPage(
-
-    # Application title
-    titlePanel("Old Faithful Geyser Data"),
-
-    # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
-        )
+  sidebarLayout(
+    sidebarPanel(
+      fileInput("file", "Choose CSV File"),
+      selectInput("version", "Choose Genome Version", choices = c("37", "38")),
+      actionButton("submit", "Submit")
+    ),
+    mainPanel(
+      tableOutput("rsTable")
     )
+  )
 )
-
-# Define server logic required to draw a histogram
 server <- function(input, output) {
-
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white',
-             xlab = 'Waiting time to next eruption (in mins)',
-             main = 'Histogram of waiting times')
-    })
+  # This will store the rs_ID_clean dataframe
+  rsData <- reactiveVal()
+  
+  observeEvent(input$submit, {
+    inFile <- input$file
+    genomeVersion <- input$version
+    
+    if (!is.null(inFile)) {
+      # Set the variables file_path and genome_version 
+      file_path <<- inFile$datapath
+      genome_version <<- genomeVersion
+      
+      # Now source the rsid_Ensembl.R script
+      source("C:/Users/bryan/Desktop/USC_research/Huaiyu/Snps-to-panther/rsid_Ensembl.R")
+      
+      # Assign the rs_ID_clean$refsnp_id to rsData
+      rsData(rs_ID_clean$refsnp_id)
+    }
+  })
+  
+  # Render the table using the data stored in rsData
+  output$rsTable <- renderTable({
+    data.frame(rsID = rsData())
+  })
 }
 
 # Run the application 
