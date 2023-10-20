@@ -144,3 +144,18 @@ query_obj_to_json(regionQuery(contig = '20', start=26188698, end=26190631))
 sink()
 ```
 
+
+```{r}
+q = init_query_js_body()
+ex = exists_filter("ANNOVAR_ensembl_Effect")
+q = add_query_filter(q, ex)
+variants = perform_search(q)
+variants
+```
+
+
+```{r}
+variant = rsidQuery('rs193031179')
+variant
+```
+

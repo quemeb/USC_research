@@ -59,10 +59,12 @@ drop if missing(res)
 drop resilience a156 a157 a158 a159 a160 a161 
 * Generating Ordinal Resilience 
 
+summarize res
+
 gen res_cat = .
-replace res_cat = 0 if res < 3.167 - .485713
-replace res_cat = 1 if res >= 3.167 - .485713 & res != .
-replace res_cat = 2 if res >= 3.167 + .485713 & res != .
+replace res_cat = 0 if res < r(mean) - r(sd)
+replace res_cat = 1 if res >= r(mean) - r(sd) & res != .
+replace res_cat = 2 if res >= r(mean) + r(sd) & res != .
 
 *gen res_cat = 0
 *replace res_cat = 1 if res >= 3 
@@ -363,7 +365,7 @@ label variable weight_change "Combined Weights"
 label define weight_changef 0 "Stayed the same" 1 "Increased/decreased" 2 "Don't know'"
 label values weight_change weight_changef 
 
-logit res_cat cov_burden cov_psych i.livingstatus01 i.weight_change, nolog or
+logit res_cat cov_psych i.livingstatus01 i.weight_change, nolog or
 
 * ----------------- Model diagnostics ----------------------
 
@@ -409,7 +411,8 @@ twoway scatter delta_x2 p [aweight = delta_beta], msymbol(circle_hollow)
 
 * ---------------- Predictions ---------------------------
 
-
+logit res_cat cov_psych i.livingstatus01 i.weight_change, nolog or
+// better AUC and GOF
 
 estat classification
 lroc 
@@ -417,7 +420,7 @@ lsens
 predict p
 cutpt res_cat p
 
-logit res_cat log_cov_contact cov_burden cov_psych i.sex01 i.residence01 i.race01, nolog or
+
 estat clas, cut(.16782232)
 
 

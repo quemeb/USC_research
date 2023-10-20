@@ -58,10 +58,13 @@ drop if missing(res)
 // we will use our score because they are different 
 drop resilience a156 a157 a158 a159 a160 a161 
 * Generating Ordinal Resilience 
+
+summarize res
+
 gen res_cat = .
-replace res_cat = 0 if res < 3.167 - .485713
-replace res_cat = 1 if res >= 3.167 - .485713 & res != .
-replace res_cat = 2 if res >= 3.167 + .485713 & res != .
+replace res_cat = 0 if res < r(mean) - r(sd)
+replace res_cat = 1 if res >= r(mean) - r(sd) & res != .
+replace res_cat = 2 if res >= r(mean) + r(sd) & res != .
 
 *gen res_cat = 0
 *replace res_cat = 1 if res >= 3 
@@ -357,7 +360,7 @@ logit res_cat cov_effect_cos i.religion01 i.weightchangeoverthepast6months01 i.i
 *}
 *di "$confounders_cont"
 
-logit res_cat cov_effect_cos i.religion01 i.weightchangeoverthepast6months01 i.insu ageyears, nolog or
+logit res_cat i.religion01 i.weightchangeoverthepast6months01 i.insu ageyears, nolog or
 
 test 4.insu == 10.insu
 gen insu_full = 0
@@ -370,7 +373,7 @@ label values insu_full insu_fullf
 *ageyears was a confounder and made cos pshy not stat sig
 **# * ------------------ FINAL MENTAL MODEL --------------------
 
-logit res_cat ib7.religion01 i.insu_full ageyears, nolog or
+logit res_cat ageyears ib7.religion01 i.insu_full, nolog or
 
 
 * ----------------- Model diagnostics ----------------------
