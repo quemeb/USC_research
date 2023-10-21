@@ -93,7 +93,7 @@ drop covid_fear a168 a169 a170 a171 a172
 
 *------------------ COVID_PHYCH 
 
-gen cov_psych = a173 + a177 + a178 + a179 + a181 + a182 + a183 + a184 + a185 + a186
+gen cov_psych = (a173 + a177 + a178 + a179 + a181 + a182 + a183 + a184 + a185 + a186)/10
 codebook cov_psych
 //hist cov_psych, frequency normal title("distribution of cov_psych")
 drop covid_psych a173 a177 a178 a179 a181 a182 a183 a184 a185 a186
