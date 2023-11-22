@@ -10,7 +10,7 @@ import time
 pattern = re.compile("ENSG...........")
 
 def load_data(file_path):
-    columns_needed = ["chr", "pos", "ref", "alt", "rs_dbSNP151", "ANNOVAR_ensembl_Gene_ID","ANNOVAR_ensembl_Closest_gene(intergenic_only)", "SnpEff_ensembl_Gene_ID", "VEP_ensembl_Gene_ID"]
+    columns_needed = ["chr", "pos", "ref", "alt", "rs_dbSNP151", "ANNOVAR_ensembl_Gene_ID","ANNOVAR_ensembl_Closest_gene(intergenic_only)", "SnpEff_ensembl_Gene_ID", "VEP_ensembl_Gene_ID", ""]
     df = pd.read_csv(file_path, usecols=columns_needed, delimiter="\t", dtype= object, compression='gzip')
     return df
 
@@ -246,7 +246,7 @@ def data_process(file):
 
 
     #Rational Counts
-    non_empty_count = [item for item in VP_ID_tog if item != "."]
+    non_empty_count = [item for item in SN_ID_tog if item != "."]
     print("Number of non-empty cells:", len(non_empty_count))
 
 
