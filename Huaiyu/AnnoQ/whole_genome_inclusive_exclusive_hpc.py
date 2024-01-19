@@ -349,8 +349,8 @@ def data_process(file):
     tool_agreement_genetic = total_annotation_agreement(united_unique_genic, AN_ID_genic, SN_ID_genic, VP_ID_genic)
     
     # Summary returns
-    inter_summary = data_summary(tool_agreement_intergenic, rates_inter , A_S_inter_check, V_S_inter_check, V_A_inter_check, int(chrs[1]), size_inter)
-    genic_summary = data_summary(tool_agreement_genetic, rates_genic, A_S_genic_check, V_S_genic_check, V_A_genic_check, int(chrs[1]), size_genic)
+    inter_summary = data_summary(tool_agreement_intergenic, rates_inter , A_S_inter_check, V_S_inter_check, V_A_inter_check, chrs[1], size_inter)
+    genic_summary = data_summary(tool_agreement_genetic, rates_genic, A_S_genic_check, V_S_genic_check, V_A_genic_check, chrs[1], size_genic)
     
     return inter_summary, genic_summary
 
@@ -363,7 +363,7 @@ def process_all_files():
     #path = "/Users/queme/OneDrive - University of Southern California/Research/Huaiyu Mi/AnnoQ/AnnoQ_data/*.gz"
     
     #HPC
-    path = "/home1/queme/AnnoQ/hrc_12_2019"
+    path = "/home1/queme/AnnoQ/hrc_12_2019/*.gz"
     
     
     # Step 1: Create empty dictionaries for accumulation
