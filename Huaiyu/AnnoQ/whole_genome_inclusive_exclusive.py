@@ -349,15 +349,15 @@ def data_process(file):
     tool_agreement_genetic = total_annotation_agreement(united_unique_genic, AN_ID_genic, SN_ID_genic, VP_ID_genic)
     
     # Summary returns
-    inter_summary = data_summary(tool_agreement_intergenic, rates_inter , A_S_inter_check, V_S_inter_check, V_A_inter_check, chrs[1], size_inter)
-    genic_summary = data_summary(tool_agreement_genetic, rates_genic, A_S_genic_check, V_S_genic_check, V_A_genic_check, chrs[1], size_genic)
+    inter_summary = data_summary(tool_agreement_intergenic, rates_inter , A_S_inter_check, V_S_inter_check, V_A_inter_check, int(chrs[1]), size_inter)
+    genic_summary = data_summary(tool_agreement_genetic, rates_genic, A_S_genic_check, V_S_genic_check, V_A_genic_check, int(chrs[1]), size_genic)
     
     return inter_summary, genic_summary
 
 
 def process_all_files():
     #windows_path = "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Huaiyu Mi\\AnnoQ\\AnnoQ_data\\*.gz"
-    mac_path = "/Users/bryan/OneDrive - University of Southern California/Research/Huaiyu Mi/AnnoQ/AnnoQ_data/*.gz"
+    mac_path = "/Users/queme/OneDrive - University of Southern California/Research/Huaiyu Mi/AnnoQ/AnnoQ_data/*.gz"
 
     
     # Step 1: Create empty dictionaries for accumulation
@@ -378,12 +378,12 @@ def process_all_files():
     df_genic = pd.DataFrame(all_data2).T  # Same reason for Transpose
     
     # Assuming the chromosome numbers are stored in a column named 'Chr', sort by this column
-    #df_inter_sorted = df_inter.sort_values(by='Chr')
-    #df_genic_sorted = df_genic.sort_values(by='Chr')
+    df_inter_sorted = df_inter.sort_values(by='Chr')
+    df_genic_sorted = df_genic.sort_values(by='Chr')
     
-    #return df_inter_sorted, df_genic_sorted
+    return df_inter_sorted, df_genic_sorted
     
-    return df_inter, df_genic
+    #return df_inter, df_genic
     
 
 
@@ -396,8 +396,8 @@ def main():
     
     # Save them to CSV
     # windows platform
-    #df_inter_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\inter_results.csv', index=False)
-    #df_genic_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\genic_results.csv', index=False)
+    #df_inter_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Huaiyu Mi\\AnnoQ\\inter_results.csv', index=False)
+    #df_genic_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Huaiyu Mi\\AnnoQ\\genic_results.csv', index=False)
 
     # Mac Platform
     df_inter_sorted.to_csv('/Users/queme/OneDrive - University of Southern California/Research/Huaiyu Mi/AnnoQ/inter_results_new.csv', index=False)
