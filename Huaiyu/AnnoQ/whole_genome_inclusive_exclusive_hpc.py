@@ -360,7 +360,10 @@ def process_all_files():
     #path = "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Huaiyu Mi\\AnnoQ\\AnnoQ_data\\*.gz"
     
     #MAC
-    path = "/Users/queme/OneDrive - University of Southern California/Research/Huaiyu Mi/AnnoQ/AnnoQ_data/*.gz"
+    #path = "/Users/queme/OneDrive - University of Southern California/Research/Huaiyu Mi/AnnoQ/AnnoQ_data/*.gz"
+    
+    #HPC
+    path = "/home1/queme/AnnoQ/hrc_12_2019"
     
     
     # Step 1: Create empty dictionaries for accumulation
@@ -368,7 +371,7 @@ def process_all_files():
     all_data2 = {}
     
     for filename in glob.glob(path):
-        print(f"Processing file: {filename}")  # Print the current filename
+        #print(f"Processing file: {filename}")  # Print the current filename
         inter, genic = data_process(filename)
         
         # Assuming the chromosome is the key and the data_summary dictionary is the value
@@ -403,14 +406,17 @@ def main():
     #df_genic_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Huaiyu Mi\\AnnoQ\\genic_results.csv', index=False)
 
     # Mac Platform
-    df_inter_sorted.to_csv('/Users/queme/OneDrive - University of Southern California/Research/Huaiyu Mi/AnnoQ/inter_results_new.csv', index=False)
-    df_genic_sorted.to_csv('/Users/queme/OneDrive - University of Southern California/Research/Huaiyu Mi/AnnoQ/genic_results_new.csv', index=False)
+    #df_inter_sorted.to_csv('/Users/queme/OneDrive - University of Southern California/Research/Huaiyu Mi/AnnoQ/inter_results_new.csv', index=False)
+    #df_genic_sorted.to_csv('/Users/queme/OneDrive - University of Southern California/Research/Huaiyu Mi/AnnoQ/genic_results_new.csv', index=False)
 
+    # HPC 
+    df_inter_sorted.to_csv("/home1/queme/AnnoQ/hrc_12_2019/hrc_12_2019_subsets_counts/inter_results_new.csv", index=False)
+    df_genic_sorted.to_csv("/home1/queme/AnnoQ/hrc_12_2019/hrc_12_2019_subsets_counts/genic_results_new.csv", index=False)
 
     # End the timer and calculate elapsed time
     elapsed_time = time.time() - start_time
 
-    print("Files saved successfully!")
+    #print("Files saved successfully!")
     print(f"Total time elapsed: {elapsed_time:.2f} seconds")
 
 # This block ensures that the main function is called only when the script is run directly, 
