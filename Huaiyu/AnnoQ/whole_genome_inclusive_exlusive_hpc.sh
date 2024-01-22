@@ -2,9 +2,9 @@
 
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=184GB
-#SBATCH --time=16:00:00
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=16GB
+#SBATCH --time=04:00:00
 #SBATCH --mail-type=BEGIN,END,FAIL
 
 module purge
