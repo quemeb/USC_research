@@ -228,7 +228,7 @@ def data_summary(tool_agreement, rates, A_S ,V_S, V_A, chrs, sizes):
                 "A_S_improper": A_S['improper'],
                 "A_S_disjoint": A_S['disjoint'],
                 "A_S_superset": A_S['superset'],
-                "A_S_partial:": A_S['partial'],
+                "A_S_partial": A_S['partial'],
                 "A_S_shouldnt": A_S['shouldnt'],
                 # Partial aggrement VEP vs SnpEff
                 "V_S_proper": V_S['proper'],
