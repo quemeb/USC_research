@@ -23,7 +23,7 @@ def no_repeats(nparray):
 def extract(lists):
     return[pattern.findall(lst) for lst in lists]
 
-def total_annotation_agreement(uni_clean, AN, SN, VP):
+def complete_annotation_agreement(uni_clean, AN, SN, VP):
     """
     This function compares full aggrement of the unique clean list vs. all
     other individual lists
@@ -113,54 +113,54 @@ def total_annotation_agreement(uni_clean, AN, SN, VP):
     return counters  # Return the counters dictionary.
 
 
-def partial_annotation_aggrement_and_rates(test, master):
+def partial_annotation_agreement(test, master):
     """
-    Compares elements of two lists (test and master) to determine their subset and superset relationships.
+    Compares elements of two lists (test and master) to determine their subset (proper or improper), superset, 
+    disjoint, and intersection relationships.
 
     Parameters:
-        test (list): A list of sets/items to be compared against the master list.
-        master (list): A list of sets/items considered as the reference for comparison.
+        test (list): A list of sets/items to be compared against the master list. Each element of the list is a set.
+        master (list): A list of sets/items considered as the reference for comparison. Each element of the list is a set.
 
     Returns:
         tuple: Contains the count of occurrences for each relationship type 
-        (proper subset, improper subset, not a subset, proper superset, not a superset).
+        (proper subset, improper subset, disjoint, proper superset, partial overlap).
     """
     
-    list_length = len(test)
+    proper_subset_count = 0
+    improper_subset_count = 0
+    disjoint_count = 0
+    proper_superset_count = 0
+    partial_overlap_count = 0
+    shouldnt_have_any = 0
 
-    proper_subset_list = []
-    improper_subset_list = []
-    not_subset_list = []
-    proper_superset_list = []
-    not_superset_list = []
+    for test_set, master_set in zip(test, master):
+        test_set = set(test_set)
+        master_set = set(master_set)
 
-    for i in range(list_length):
-        test_set = set(test[i])
-        master_set = set(master[i])
+        # Check if test set is a proper subset of master set
+        if test_set < master_set:
+            proper_subset_count += 1
+        # Check if test set is equal to (improper subset of) master set
+        elif test_set == master_set:
+            improper_subset_count += 1
+        # Check if sets are disjoint (no elements in common)
+        elif test_set.isdisjoint(master_set):
+            disjoint_count += 1
+        # Check if test set is a proper superset of master set
+        elif test_set > master_set:
+            proper_superset_count += 1
+        # Check for partial overlap
+        elif test_set & master_set and test_set != master_set:
+            partial_overlap_count += 1
+        # Check nothing funky is happening
+        else:
+            shouldnt_have_any += 1
 
-          # Checking for subset relations
-        if test_set < master_set:  # Proper subset
-            proper_subset_list.append(1)
-        elif test_set == master_set:  # Equal sets (Improper subset)
-            improper_subset_list.append(1)
-        else:  # Not a subset
-            not_subset_list.append(1)
+    # Return the counts for each type of relationship
+    return (proper_subset_count, improper_subset_count, disjoint_count, 
+            proper_superset_count, partial_overlap_count, shouldnt_have_any)
 
-        # Checking for superset relations
-        if master_set < test_set:  # Proper superset
-            proper_superset_list.append(1)
-        else:  # Not a superset
-            not_superset_list.append(1)
-
-    # Summing the occurrences for each condition
-    proper_subset_count = sum(proper_subset_list)
-    improper_subset_count = sum(improper_subset_list)
-    not_subset_count = sum(not_subset_list)
-    proper_superset_count = sum(proper_superset_list)
-    not_superset_count = sum(not_superset_list)
-
-    return (proper_subset_count, improper_subset_count, not_subset_count, 
-            proper_superset_count, not_superset_count)
 
 
 def snp_annotation_rate(test):
@@ -228,16 +228,22 @@ def data_summary(tool_agreement, rates, A_S ,V_S, V_A, chrs, sizes):
                 "A_S_improper": A_S['improper'],
                 "A_S_disjoint": A_S['disjoint'],
                 "A_S_superset": A_S['superset'],
+                "A_S_partial:": A_S['partial'],
+                "A_S_shouldnt": A_S['shouldnt'],
                 # Partial aggrement VEP vs SnpEff
                 "V_S_proper": V_S['proper'],
                 "V_S_improper": V_S['improper'],
                 "V_S_disjoint": V_S['disjoint'],
                 "V_S_superset": V_S['superset'],
+                "V_S_partial": V_S['partial'],
+                "V_S_shouldnt": V_S['shouldnt'],
                 # Partial Aggrement VEP vs Annovar
                 "V_A_proper": V_A['proper'],
                 "V_A_improper": V_A['improper'],
                 "V_A_disjoint": V_A['disjoint'],
-                "V_A_superset": V_A['superset']
+                "V_A_superset": V_A['superset'],
+                "V_A_partial": V_A['partial'],
+                "V_A_shouldnt": V_A['shouldnt']
                 }
     return dictionary 
 
@@ -321,15 +327,15 @@ def data_process(file):
 
     # Names of the variables you want to create
     output_names = ['proper', 'improper', 'disjoint', 
-                    'superset', 'no_superset', 'snp_annotation_rate']
+                    'superset', 'partial', 'shouldnt']
 
-    A_S_inter_check = run_and_store_results(partial_annotation_aggrement_and_rates, (AN_ID_inter, SN_ID_inter), output_names)
-    V_S_inter_check = run_and_store_results(partial_annotation_aggrement_and_rates, (VP_ID_inter, SN_ID_inter), output_names)
-    V_A_inter_check = run_and_store_results(partial_annotation_aggrement_and_rates, (VP_ID_inter, AN_ID_inter), output_names)
+    A_S_inter_check = run_and_store_results(partial_annotation_agreement, (AN_ID_inter, SN_ID_inter), output_names)
+    V_S_inter_check = run_and_store_results(partial_annotation_agreement, (VP_ID_inter, SN_ID_inter), output_names)
+    V_A_inter_check = run_and_store_results(partial_annotation_agreement, (VP_ID_inter, AN_ID_inter), output_names)
     
-    A_S_genic_check = run_and_store_results(partial_annotation_aggrement_and_rates, (AN_ID_genic, SN_ID_genic), output_names)
-    V_S_genic_check = run_and_store_results(partial_annotation_aggrement_and_rates, (VP_ID_genic, SN_ID_genic), output_names)
-    V_A_genic_check = run_and_store_results(partial_annotation_aggrement_and_rates, (VP_ID_genic, AN_ID_genic), output_names)
+    A_S_genic_check = run_and_store_results(partial_annotation_agreement, (AN_ID_genic, SN_ID_genic), output_names)
+    V_S_genic_check = run_and_store_results(partial_annotation_agreement, (VP_ID_genic, SN_ID_genic), output_names)
+    V_A_genic_check = run_and_store_results(partial_annotation_agreement, (VP_ID_genic, AN_ID_genic), output_names)
 
     
     # Calculating rates and storing them in a dictionary
@@ -345,8 +351,8 @@ def data_process(file):
     }
 
     #Total Annotaiton aggrement 
-    tool_agreement_intergenic = total_annotation_agreement(united_unique_inter, AN_ID_inter, SN_ID_inter, VP_ID_inter)
-    tool_agreement_genetic = total_annotation_agreement(united_unique_genic, AN_ID_genic, SN_ID_genic, VP_ID_genic)
+    tool_agreement_intergenic = complete_annotation_agreement(united_unique_inter, AN_ID_inter, SN_ID_inter, VP_ID_inter)
+    tool_agreement_genetic = complete_annotation_agreement(united_unique_genic, AN_ID_genic, SN_ID_genic, VP_ID_genic)
     
     # Summary returns
     inter_summary = data_summary(tool_agreement_intergenic, rates_inter , A_S_inter_check, V_S_inter_check, V_A_inter_check, chrs[1], size_inter)
@@ -388,8 +394,6 @@ def process_all_files():
     df_genic_sorted = df_genic.sort_values(by='Chr')
     
     return df_inter_sorted, df_genic_sorted
-    
-    #return df_inter, df_genic
     
 
 
