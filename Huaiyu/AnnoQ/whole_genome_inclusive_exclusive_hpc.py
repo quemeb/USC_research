@@ -5,9 +5,10 @@ import re
 import glob 
 import time 
 
+
 """ FUNCTIONS """
 # Precompile the regular expression
-pattern = re.compile("ENSG...........")
+pattern = re.compile(r"ENSG\d+",re.IGNORECASE)
 
 def load_data(file_path):
     columns_needed = ["chr", "pos", "ref", "alt", "rs_dbSNP151", "ANNOVAR_ensembl_Gene_ID","ANNOVAR_ensembl_Closest_gene(intergenic_only)", "SnpEff_ensembl_Gene_ID", "VEP_ensembl_Gene_ID"]
@@ -22,7 +23,29 @@ def no_repeats(nparray):
 def extract(lists):
     return[pattern.findall(lst) for lst in lists]
 
-def annotation_agreement_rate(uni_clean, AN, SN, VP):
+def complete_annotation_agreement(uni_clean, AN, SN, VP):
+    """
+    This function compares full aggrement of the unique clean list vs. all
+    other individual lists
+
+    Parameters
+    ----------
+    uni_clean : TYPE
+        unique clean list for each SNP.
+    AN : TYPE
+        Annovar list.
+    SN : TYPE
+        SnpEff list.
+    VP : TYPE
+        VEP list.
+
+    Returns
+    -------
+    TYPE
+        DESCRIPTION.
+
+    """
+    
     # Initialize a dictionary to store various counts.
     counters = {
         'all_agree': 0,
@@ -90,77 +113,74 @@ def annotation_agreement_rate(uni_clean, AN, SN, VP):
     return counters  # Return the counters dictionary.
 
 
-def annotation_single_to_master(test, master):
+def partial_annotation_agreement(test, master):
+    """
+    Compares elements of two lists (test and master) to determine their subset (proper or improper), superset, 
+    disjoint, and intersection relationships.
+
+    Parameters:
+        test (list): A list of sets/items to be compared against the master list. Each element of the list is a set.
+        master (list): A list of sets/items considered as the reference for comparison. Each element of the list is a set.
+
+    Returns:
+        tuple: Contains the count of occurrences for each relationship type 
+        (proper subset, improper subset, disjoint, proper superset, partial overlap).
+    """
     
-    # Get the length of the test and master lists; assume they have the same length
-    list_length = len(test)
+    proper_subset_count = 0
+    improper_subset_count = 0
+    disjoint_count = 0
+    proper_superset_count = 0
+    partial_overlap_count = 0
+    shouldnt_have_any = 0
+
+    for test_set, master_set in zip(test, master):
+        test_set = set(test_set)
+        master_set = set(master_set)
+
+        # Check if test set is a proper subset of master set
+        if test_set < master_set:
+            proper_subset_count += 1
+        # Check if test set is equal to (improper subset of) master set
+        elif test_set == master_set:
+            improper_subset_count += 1
+        # Check if sets are disjoint (no elements in common)
+        elif test_set.isdisjoint(master_set):
+            disjoint_count += 1
+        # Check if test set is a proper superset of master set
+        elif test_set > master_set:
+            proper_superset_count += 1
+        # Check for partial overlap
+        elif test_set & master_set and test_set != master_set:
+            partial_overlap_count += 1
+        # Check nothing funky is happening
+        else:
+            shouldnt_have_any += 1
+
+    # Return the counts for each type of relationship
+    return (proper_subset_count, improper_subset_count, disjoint_count, 
+            proper_superset_count, partial_overlap_count, shouldnt_have_any)
+
+
+
+def snp_annotation_rate(test):
+    """
+    Calculates the SNP annotation rate based on the number of elements in each test item.
+
+    Parameters:
+        test (list): A list of sets/items whose annotation rate is to be calculated.
+
+    Returns:
+        int: The total SNP annotation rate for the test list.
+    """
     snp_annotation_rate = 0
-    
-    # Initialize lists to store matches and annotation rates.
-    match_list = []
-    complete_annotation_list = []
-    partial_annotation_list = []
-    no_annotation_list = []
-    snp_annotation_rate = 0  # Initialize the rate counter
-    
-    # Iterate through both the test and master lists
-    for i in range(list_length):
-        test_item = test[i]
-        master_item = master[i]
-        
-        zize = len(master_item)  # Number of Gene IDs in the current master item
-        rate = len(test_item)   # Number of Gene IDs in the current test item
-        snp_annotation_rate += rate  # Increment the annotation rate counter
-  
-        # Case 1: If Gene ID is empty (this is mostly for VEP in intergenic region)
-        if rate == 0: 
-            no_annotation_list.append(1)
-            partial_annotation_list.append(0)
-            complete_annotation_list.append(0)        
-        # Case 2: If there is only one Gene ID in the master item (max(test) <= 1)
-        elif zize == 1:
-            is_match = test_item in master_item  # Check if the test item is in the master item
-            
-            match_list.append([1] if is_match else [])
-            
-            # Add to annotation lists, casting boolean to integer (1 if True, 0 if False)
-            complete_annotation_list.append(int(is_match))
-            partial_annotation_list.append(0)  # Placeholder
-            no_annotation_list.append(int(not is_match))
-        # Case 3: If there is more than one Gene ID in the master item
-        elif zize > 1:
-            match_indices = [x + 1 for x in range(len(master_item)) if master_item[x] in test_item]
-            match_list.append(match_indices if match_indices else [])
-            
-            complete_match = False  # Initialize both as False at the start of the loop
-            partial_match = False
-    
-            # Check for complete match first
-            if all(x in test_item for x in master_item):
-                complete_match = True
-            # Check for partial match only if complete_match is False
-            elif any(x in test_item for x in master_item):
-                partial_match = True
-    
-            # Append results to respective lists
-            complete_annotation_list.append(int(complete_match))
-            partial_annotation_list.append(int(partial_match))
-            no_annotation_list.append(int(not partial_match and not complete_match))
-        
-            
-    complete_agreement = sum(complete_annotation_list)
-    partial_agreement = sum(partial_annotation_list)
-    no_agreement = sum(no_annotation_list)
-            
-    # Return the results as a tuple
-    return (match_list, 
-    complete_annotation_list, 
-    partial_annotation_list, 
-    no_annotation_list, 
-    snp_annotation_rate,
-    complete_agreement,
-    partial_agreement,
-    no_agreement)
+
+    for item in test:
+        snp_annotation_rate += len(set(item))
+
+    return snp_annotation_rate
+
+
 
 def run_and_store_results(func, args, output_names):
     """
@@ -188,9 +208,9 @@ def run_and_store_results(func, args, output_names):
     
     return result_dict
 
-def data_summary(tool_agreement, S, A, V, chrs, sizes):
+def data_summary(tool_agreement, rates, A_S ,V_S, V_A, chrs, sizes):
     dictionary = {"Chr": chrs, 
-                "SAP" :tool_agreement['all_agree'], 
+                "SAV" :tool_agreement['all_agree'], 
                 "SA": tool_agreement['SA'], 
                 "SV":tool_agreement['SV'], 
                 "AV":tool_agreement['AV'], 
@@ -198,16 +218,32 @@ def data_summary(tool_agreement, S, A, V, chrs, sizes):
                 "A":tool_agreement['A'], 
                 "V":tool_agreement['V'], 
                 "None":tool_agreement['none_agree'], 
-                "Total SNPs":sizes,
-                "S_partial": S['partial_agreement'],
-                "A_partial": A['partial_agreement'],
-                "V_partial": V['partial_agreement'],
-                "S_no_agreement": S['no_agreement'],
-                "A_no_agreement": A['no_agreement'],
-                "V_no_agreement": V['no_agreement'],
-                "S_rate": S["snp_annotation_rate"],
-                "A_rate": A["snp_annotation_rate"],
-                "V_rate": V["snp_annotation_rate"],
+                "Total SNPs": sizes,
+                # Annotation rates
+                "S_rate": rates['S_rate'],
+                "A_rate": rates['A_rate'],
+                "V_rate": rates['V_rate'],
+                # Partial Aggrements Annovar vs SnpEff
+                "A_S_proper": A_S['proper'],
+                "A_S_improper": A_S['improper'],
+                "A_S_disjoint": A_S['disjoint'],
+                "A_S_superset": A_S['superset'],
+                "A_S_partial": A_S['partial'],
+                "A_S_shouldnt": A_S['shouldnt'],
+                # Partial aggrement VEP vs SnpEff
+                "V_S_proper": V_S['proper'],
+                "V_S_improper": V_S['improper'],
+                "V_S_disjoint": V_S['disjoint'],
+                "V_S_superset": V_S['superset'],
+                "V_S_partial": V_S['partial'],
+                "V_S_shouldnt": V_S['shouldnt'],
+                # Partial Aggrement VEP vs Annovar
+                "V_A_proper": V_A['proper'],
+                "V_A_improper": V_A['improper'],
+                "V_A_disjoint": V_A['disjoint'],
+                "V_A_superset": V_A['superset'],
+                "V_A_partial": V_A['partial'],
+                "V_A_shouldnt": V_A['shouldnt']
                 }
     return dictionary 
 
@@ -215,9 +251,9 @@ def data_summary(tool_agreement, S, A, V, chrs, sizes):
 def data_process(file):
 
     # Reading file
-   # file_path = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
-   # cdata = load_data(file)
-    cdata = load_data("C:\\Users\\bryan\\Desktop\\USC_research\\Huaiyu\\AnnoQ\\sample_annotations_ch18.txt.gz")
+    # file_path = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
+    # cdata = load_data("/Users/queme/Desktop/USC_research/Huaiyu/AnnoQ/sample_annotations_ch18.txt.gz")
+    cdata = load_data(file)
     
     # Selecting data
     AN_ID_genic = cdata["ANNOVAR_ensembl_Gene_ID"]  #Gene ID should be here
@@ -246,8 +282,8 @@ def data_process(file):
 
 
     #Rational Counts
-    non_empty_count = [item for item in SN_ID_tog if item != "."]
-    print("Number of non-empty cells:", len(non_empty_count))
+    #non_empty_count = [item for item in SN_ID_tog if item != "."]
+    #print("Number of non-empty cells:", len(non_empty_count))
 
 
     """ Extracting Gene IDs"""
@@ -290,44 +326,64 @@ def data_process(file):
     
 
     # Names of the variables you want to create
-    output_names = ['match_list', 'complete_annotation_list', 'partial_annotation_list', 'no_annotation_list', 'snp_annotation_rate', 'complete_agreement', 'partial_agreement', 'no_agreement']
+    output_names = ['proper', 'improper', 'disjoint', 
+                    'superset', 'partial', 'shouldnt']
 
-    AN_ID_inter_check = run_and_store_results(annotation_single_to_master, (AN_ID_inter, united_unique_inter), output_names)
-    SN_ID_inter_check = run_and_store_results(annotation_single_to_master, (SN_ID_inter, united_unique_inter), output_names)
-    VP_ID_inter_check = run_and_store_results(annotation_single_to_master, (VP_ID_inter, united_unique_inter), output_names)
-    AN_ID_genic_check = run_and_store_results(annotation_single_to_master, (AN_ID_genic, united_unique_genic), output_names)
-    SN_ID_genic_check = run_and_store_results(annotation_single_to_master, (SN_ID_genic, united_unique_genic), output_names)
-    VP_ID_genic_check = run_and_store_results(annotation_single_to_master, (VP_ID_genic, united_unique_genic), output_names)
+    A_S_inter_check = run_and_store_results(partial_annotation_agreement, (AN_ID_inter, SN_ID_inter), output_names)
+    V_S_inter_check = run_and_store_results(partial_annotation_agreement, (VP_ID_inter, SN_ID_inter), output_names)
+    V_A_inter_check = run_and_store_results(partial_annotation_agreement, (VP_ID_inter, AN_ID_inter), output_names)
+    
+    A_S_genic_check = run_and_store_results(partial_annotation_agreement, (AN_ID_genic, SN_ID_genic), output_names)
+    V_S_genic_check = run_and_store_results(partial_annotation_agreement, (VP_ID_genic, SN_ID_genic), output_names)
+    V_A_genic_check = run_and_store_results(partial_annotation_agreement, (VP_ID_genic, AN_ID_genic), output_names)
 
+    
+    # Calculating rates and storing them in a dictionary
+    rates_inter = {
+        "S_rate": snp_annotation_rate(SN_ID_inter),
+        "A_rate": snp_annotation_rate(AN_ID_inter),
+        "V_rate": snp_annotation_rate(VP_ID_inter)
+    }
+    rates_genic = {
+        "S_rate": snp_annotation_rate(SN_ID_genic),
+        "A_rate": snp_annotation_rate(AN_ID_genic),
+        "V_rate": snp_annotation_rate(VP_ID_genic)
+    }
 
-    """  HYPOTHESIS TESTING  """
-
-    tool_agreement_intergenic = annotation_agreement_rate(united_unique_inter, AN_ID_inter, SN_ID_inter, VP_ID_inter)
-    tool_agreement_genetic = annotation_agreement_rate(united_unique_genic, AN_ID_genic, SN_ID_genic, VP_ID_genic)
+    #Total Annotaiton aggrement 
+    tool_agreement_intergenic = complete_annotation_agreement(united_unique_inter, AN_ID_inter, SN_ID_inter, VP_ID_inter)
+    tool_agreement_genetic = complete_annotation_agreement(united_unique_genic, AN_ID_genic, SN_ID_genic, VP_ID_genic)
     
     # Summary returns
-    inter_summary = data_summary(tool_agreement_intergenic, SN_ID_inter_check, AN_ID_inter_check, VP_ID_inter_check, chrs[1], size_inter)
-    genic_summary = data_summary(tool_agreement_genetic, SN_ID_genic_check, AN_ID_genic_check, VP_ID_genic_check, chrs[1], size_genic)
+    inter_summary = data_summary(tool_agreement_intergenic, rates_inter , A_S_inter_check, V_S_inter_check, V_A_inter_check, chrs[1], size_inter)
+    genic_summary = data_summary(tool_agreement_genetic, rates_genic, A_S_genic_check, V_S_genic_check, V_A_genic_check, chrs[1], size_genic)
     
     return inter_summary, genic_summary
 
 
-
 def process_all_files():
-    path = "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\AnnoQ_data\\*.gz"
+    #WINDOWS
+    #path = "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Huaiyu Mi\\AnnoQ\\AnnoQ_data\\*.gz"
+    
+    #MAC
+    #path = "/Users/queme/OneDrive - University of Southern California/Research/Huaiyu Mi/AnnoQ/AnnoQ_data/*.gz"
+    
+    #HPC
+    path = "/home1/queme/AnnoQ/hrc_12_2019/*.gz"
+    
     
     # Step 1: Create empty dictionaries for accumulation
     all_data1 = {}
     all_data2 = {}
     
     for filename in glob.glob(path):
-        print(f"Processing file: {filename}")  # Print the current filename
+        #print(f"Processing file: {filename}")  # Print the current filename
         inter, genic = data_process(filename)
         
         # Assuming the chromosome is the key and the data_summary dictionary is the value
         # Update the accumulated dictionaries with new data
-        all_data1[inter["Chr"]] = inter
-        all_data2[genic["Chr"]] = genic
+        all_data1[inter['Chr']] = inter
+        all_data2[genic['Chr']] = genic
         
     # Step 3: Convert dictionaries to pandas DataFrame
     df_inter = pd.DataFrame(all_data1).T  # Transpose because keys are chromosomes and values are another dictionary
@@ -338,6 +394,7 @@ def process_all_files():
     df_genic_sorted = df_genic.sort_values(by='Chr')
     
     return df_inter_sorted, df_genic_sorted
+    
 
 
 def main():
@@ -348,13 +405,24 @@ def main():
     df_inter_sorted, df_genic_sorted = process_all_files()
     
     # Save them to CSV
-    df_inter_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\inter_results.csv', index=False)
-    df_genic_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Mi_lab\\AnnoQ\\genic_results.csv', index=False)
+    # windows platform
+    #df_inter_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Huaiyu Mi\\AnnoQ\\inter_results.csv', index=False)
+    #df_genic_sorted.to_csv('C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Huaiyu Mi\\AnnoQ\\genic_results.csv', index=False)
+
+    # Mac Platform
+    #df_inter_sorted.to_csv('/Users/queme/OneDrive - University of Southern California/Research/Huaiyu Mi/AnnoQ/inter_results_new.csv', index=False)
+    #df_genic_sorted.to_csv('/Users/queme/OneDrive - University of Southern California/Research/Huaiyu Mi/AnnoQ/genic_results_new.csv', index=False)
+
+    # HPC 
+    df_inter_sorted.to_csv("/home1/queme/AnnoQ/hrc_12_2019_subsets_counts/inter_results_new.csv", index=False)
+    df_genic_sorted.to_csv("/home1/queme/AnnoQ/hrc_12_2019_subsets_counts/genic_results_new.csv", index=False)
+
+
 
     # End the timer and calculate elapsed time
     elapsed_time = time.time() - start_time
 
-    print("Files saved successfully!")
+    #print("Files saved successfully!")
     print(f"Total time elapsed: {elapsed_time:.2f} seconds")
 
 # This block ensures that the main function is called only when the script is run directly, 
