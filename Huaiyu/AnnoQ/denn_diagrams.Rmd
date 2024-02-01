@@ -21,10 +21,10 @@ library(patchwork)
 ## Functions
 
 ```{r}
-long_format_total <- function(df) {
+long_format_total <- function(df, s, a, v) {
   df_long <- data.frame(
     Annotations = c(df$S_total, df$A_total, df$V_total),
-    Tool = factor(rep(c("SnpEff", "Annovar", "VEP"), each = nrow(df))),
+    Tool = factor(rep(c(s, a, v), each = nrow(df))),
     Chromosome = df$Chr,  # Assuming df has a Chrom column
     log_Annotations = log(c(df$S_total, df$A_total, df$V_total)),
     root_Annotations = sqrt(c(df$S_total, df$A_total, df$V_total)),
@@ -276,9 +276,21 @@ rm(inter_sub, genic_sub)
 ```{r}
 
 # Use the long_format function
-genic_total_long <- long_format_total(genic)
-inter_total_long <- long_format_total(inter)
-inter_genic_total_long <- long_format_total(inter_genic)
+genic_total_long <- long_format_total(genic, "SnpEff", "Annovar", "VEP")
+inter_total_long <- long_format_total(inter, "SnpEff", "Annovar (Closest Gene)", "VEP")
+inter_genic_total_long <- long_format_total(inter_genic, "SnpEff", "Annovar + Closes Genes", "VEP")
+
+
+inter_genic_total_long <- data.frame(
+    Annotations = c(inter_genic$S_total, inter_genic$A_total, inter_genic$V_total,genic$A_total),
+    Tool = factor(rep(c("SnpEff", "Annovar + Closest Gene", "VEP", "Annovar"), each = nrow(df))),
+    Chromosome = inter_genic$Chr,  # Assuming df has a Chrom column
+    log_Annotations = log(c(inter_genic$S_total, inter_genic$A_total, inter_genic$V_total,genic$A_total)),
+    root_Annotations = sqrt(c(inter_genic$S_total, inter_genic$A_total, inter_genic$V_total,genic$A_total)),
+    rate_Annotations = c(inter_genic$S_rate, inter_genic$A_rate, inter_genic$V_rate,genic$A_total)
+)
+
+
 
 genic_total_partial_long <- long_format_total_partial(genic)
 inter_total_partial_long <- long_format_total_partial(inter)
@@ -290,8 +302,8 @@ inter_genic_total_partial_long <- long_format_total_partial(inter_genic)
 
 ```{r}
 genic_total_long$Chromosome <- factor(genic_total_long$Chromosome, levels = c(as.character(1:22), "X"))
-inter_total_long$Chromosome <- factor(genic_total_long$Chromosome, levels = c(as.character(1:22), "X"))
-inter_genic_total_long$Chromosome <- factor(genic_total_long$Chromosome, levels = c(as.character(1:22), "X"))
+inter_total_long$Chromosome <- factor(inter_total_long$Chromosome, levels = c(as.character(1:22), "X"))
+inter_genic_total_long$Chromosome <- factor(inter_genic_total_long$Chromosome, levels = c(as.character(1:22), "X"))
 
 genic_boxplot <- box_raw(genic_total_long, "Genic Region by Tool") + 
   theme(axis.title.x = element_blank(),
@@ -337,6 +349,46 @@ print(combined_plots)
 
 
 ```
+
+
+
+```{r}
+genic_boxplot <- box_raw(genic_total_long, "Genic Region by Tool") + 
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none") #axis.text.y = element_blank()
+
+inter_boxplot <- box_raw(inter_total_long, "Intergenic Region by Tool")+ 
+    theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none")
+
+inter_genic_boxplot <- box_raw(inter_genic_total_long, "Whole Genome by Tool") +
+    theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none")
+
+genic_plot  <- bar_raw(genic_total_long, "Genic Region by Chromosome")+   
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none",
+        axis.text.y = element_blank())
+
+inter_plot  <- bar_raw(inter_total_long, "Intergenic Region by Chromosome") + 
+    theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none",
+        axis.text.y = element_blank())
+
+inter_genic_plot <- bar_raw(inter_genic_total_long, "Whole Genome by Chromosome") + 
+    theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none",
+        axis.text.y = element_blank())
+```
+
+
+
 
 ## Whole Genome 
 

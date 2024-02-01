@@ -50,10 +50,10 @@ drop _v2 // regrouped
 
 *------------------ RESILIENCE  
 
-egen res = rowmean(a156 a157 a158 a159 a160 a161)
+gen res = (a156 + a157 + a158 + a159 + a160 + a161)/6
 codebook res 
 drop if missing(res)
-hist res, frequency normal title("Distribution of Resilience Score")
+*hist res, frequency normal title("Distribution of Resilience Score")
 // we will use our score because they are different 
 drop resilience a156 a157 a158 a159 a160 a161 
 * Generating Ordinal Resilience 
@@ -90,7 +90,7 @@ drop covid_fear a168 a169 a170 a171 a172
 
 *------------------ COVID_PHYCH 
 
-gen cov_psych = (a173 + a177 + a178 + a179 + a181 + a182 + a183 + a184 + a185 + a186)
+egen cov_psych = rowmean(a173 a177 a178 a179 a181 a182 a183 a184 a185 a186)
 codebook cov_psych
 //hist cov_psych, frequency normal title("distribution of cov_psych")
 drop covid_psych a173 a177 a178 a179 a181 a182 a183 a184 a185 a186
@@ -428,7 +428,7 @@ global confounders_cont ""
 
 
 **# * ------------------ FINAL MENTAL MODEL --------------------
-logit mental_cat region01 _v3 well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race, nolog or 
+logit mental_cat i.region01 _v3 i.well_cat log_cov_psych cov_contact ib3._v1 i.insu_full ib7.religion01 i.race, nolog or 
 
 
 * ----------------- Model diagnostics ----------------------
