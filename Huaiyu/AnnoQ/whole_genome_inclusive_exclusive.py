@@ -133,6 +133,8 @@ def partial_annotation_aggrement_and_rates(test, master):
     not_subset_list = []
     proper_superset_list = []
     not_superset_list = []
+    empty_test_count = 0
+    empty_master_count = 0
 
     for i in range(list_length):
         test_set = set(test[i])
@@ -246,8 +248,8 @@ def data_process(file):
 
     # Reading file
     # file_path = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
-    # cdata = load_data("/Users/queme/Desktop/USC_research/Huaiyu/AnnoQ/sample_annotations_ch18.txt.gz")
-    cdata = load_data(file)
+    cdata = load_data("/Users/queme/Desktop/USC_research/Huaiyu/AnnoQ/sample_annotations_ch18.txt.gz")
+    #cdata = load_data(file)
     
     # Selecting data
     AN_ID_genic = cdata["ANNOVAR_ensembl_Gene_ID"]  #Gene ID should be here

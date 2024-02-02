@@ -52,6 +52,7 @@ def complete_annotation_agreement(uni_clean, AN, SN, VP):
         'two_agree': 0,
         'one_agree': 0,
         'none_agree': 0,
+        'no_annotation_all': 0,  # Counter for no annotation in all of AN, SN, and VP simultaneously.
         'SA': 0,
         'SV': 0,
         'AV': 0,
@@ -109,6 +110,10 @@ def complete_annotation_agreement(uni_clean, AN, SN, VP):
             counters[one_agree_mapping[des_str]] += 1
         elif temp == 0:  # None agree
             counters['none_agree'] += 1
+            
+        # Check if all AN, SN, and VP have no annotation simultaneously, regardless of matching to zize
+        if len(AN[i]) == 0 and len(SN[i]) == 0 and len(VP[i]) == 0:
+            counters['no_annotation_all'] += 1
 
     return counters  # Return the counters dictionary.
 
@@ -133,33 +138,46 @@ def partial_annotation_agreement(test, master):
     proper_superset_count = 0
     partial_overlap_count = 0
     shouldnt_have_any = 0
+    empty_test_count = 0
+    empty_master_count = 0
 
     for test_set, master_set in zip(test, master):
         test_set = set(test_set)
         master_set = set(master_set)
+        
+        if len(test_set) == 0:
+            empty_test_count += 1
+            continue  # Skip to the next pair if test is empty
+        if len(master_set) == 0:
+            empty_master_count += 1
+            continue  # Skip to the next pair if master is empty
 
-        # Check if test set is a proper subset of master set
-        if test_set < master_set:
-            proper_subset_count += 1
-        # Check if test set is equal to (improper subset of) master set
-        elif test_set == master_set:
-            improper_subset_count += 1
-        # Check if sets are disjoint (no elements in common)
-        elif test_set.isdisjoint(master_set):
-            disjoint_count += 1
-        # Check if test set is a proper superset of master set
-        elif test_set > master_set:
-            proper_superset_count += 1
-        # Check for partial overlap
-        elif test_set & master_set and test_set != master_set:
-            partial_overlap_count += 1
-        # Check nothing funky is happening
-        else:
-            shouldnt_have_any += 1
 
-    # Return the counts for each type of relationship
+        # Only compare test with master if both are not empty
+        if len(test_set) > 0 and len(master_set) > 0:
+            # Check if test set is a proper subset of master set
+            if test_set < master_set:
+                proper_subset_count += 1
+            # Check if test set is equal to (improper subset of) master set
+            elif test_set == master_set:
+                improper_subset_count += 1
+            # Check if sets are disjoint (no elements in common)
+            elif test_set.isdisjoint(master_set):
+                disjoint_count += 1
+            # Check if test set is a proper superset of master set
+            elif test_set > master_set:
+                proper_superset_count += 1
+            # Check for partial overlap
+            elif test_set & master_set and test_set != master_set:
+                partial_overlap_count += 1
+            # Check nothing funky is happening
+            else:
+                shouldnt_have_any += 1
+
+    # Return the counts for each type of relationship and empty counts
     return (proper_subset_count, improper_subset_count, disjoint_count, 
-            proper_superset_count, partial_overlap_count, shouldnt_have_any)
+            proper_superset_count, partial_overlap_count, shouldnt_have_any, 
+            empty_test_count, empty_master_count)
 
 
 
@@ -180,7 +198,29 @@ def snp_annotation_rate(test):
 
     return snp_annotation_rate
 
-
+def looking_for_total_missing(array1, array2, array3):
+    """
+    Counts the number of empty arrays in each of the three provided numpy arrays.
+    
+    Parameters:
+        array1 (numpy.ndarray): The first numpy array.
+        array2 (numpy.ndarray): The second numpy array.
+        array3 (numpy.ndarray): The third numpy array.
+    
+    Returns:
+        tuple: A tuple containing the counts of empty arrays in array1, array2, and array3 respectively.
+    """
+    # Define a function to count empty arrays in a given array
+    def count_empty_arrays(arr):
+        return sum(1 for item in arr if isinstance(item, np.ndarray) and len(item) == 0)
+    
+    # Count empty arrays in each array
+    count1 = count_empty_arrays(array1)
+    count2 = count_empty_arrays(array2)
+    count3 = count_empty_arrays(array3)
+    
+    return (count1, count2, count3)
+    
 
 def run_and_store_results(func, args, output_names):
     """
@@ -208,7 +248,7 @@ def run_and_store_results(func, args, output_names):
     
     return result_dict
 
-def data_summary(tool_agreement, rates, A_S ,V_S, V_A, chrs, sizes):
+def data_summary(tool_agreement, rates, A_S ,V_S, V_A, chrs, sizes, empty):
     dictionary = {"Chr": chrs, 
                 "SAV" :tool_agreement['all_agree'], 
                 "SA": tool_agreement['SA'], 
@@ -218,7 +258,12 @@ def data_summary(tool_agreement, rates, A_S ,V_S, V_A, chrs, sizes):
                 "A":tool_agreement['A'], 
                 "V":tool_agreement['V'], 
                 "None":tool_agreement['none_agree'], 
-                "Total SNPs": sizes,
+                "No_annotations_at_all": tool_agreement['no_annotation_all'],
+                "Total_SNPs": sizes,
+                # No annotations
+                "A_empty": empty[0],
+                "S_empty": empty[1],
+                "V_empty": empty[2],
                 # Annotation rates
                 "S_rate": rates['S_rate'],
                 "A_rate": rates['A_rate'],
@@ -230,6 +275,8 @@ def data_summary(tool_agreement, rates, A_S ,V_S, V_A, chrs, sizes):
                 "A_S_superset": A_S['superset'],
                 "A_S_partial": A_S['partial'],
                 "A_S_shouldnt": A_S['shouldnt'],
+                "A_S_left_empty": A_S['empty_left'],
+                "A_S_right_empty": A_S['empty_right'],
                 # Partial aggrement VEP vs SnpEff
                 "V_S_proper": V_S['proper'],
                 "V_S_improper": V_S['improper'],
@@ -237,13 +284,17 @@ def data_summary(tool_agreement, rates, A_S ,V_S, V_A, chrs, sizes):
                 "V_S_superset": V_S['superset'],
                 "V_S_partial": V_S['partial'],
                 "V_S_shouldnt": V_S['shouldnt'],
+                "V_S_left_empty": V_S['empty_left'],
+                "V_S_right_empty": V_S['empty_right'],
                 # Partial Aggrement VEP vs Annovar
                 "V_A_proper": V_A['proper'],
                 "V_A_improper": V_A['improper'],
                 "V_A_disjoint": V_A['disjoint'],
                 "V_A_superset": V_A['superset'],
                 "V_A_partial": V_A['partial'],
-                "V_A_shouldnt": V_A['shouldnt']
+                "V_A_shouldnt": V_A['shouldnt'],
+                "V_A_left_empty": V_A['empty_left'],
+                "V_A_right_empty": V_A['empty_right'],
                 }
     return dictionary 
 
@@ -252,7 +303,7 @@ def data_process(file):
 
     # Reading file
     # file_path = "https://github.com/quemeb/USC_research/raw/main/Huaiyu/AnnoQ/Test_data.txt.gz"
-    # cdata = load_data("/Users/queme/Desktop/USC_research/Huaiyu/AnnoQ/sample_annotations_ch18.txt.gz")
+    #cdata = load_data("/Users/queme/Desktop/USC_research/Huaiyu/AnnoQ/sample_annotations_ch18.txt.gz")
     cdata = load_data(file)
     
     # Selecting data
@@ -327,7 +378,8 @@ def data_process(file):
 
     # Names of the variables you want to create
     output_names = ['proper', 'improper', 'disjoint', 
-                    'superset', 'partial', 'shouldnt']
+                    'superset', 'partial', 'shouldnt',
+                    'empty_left', 'empty_right']
 
     A_S_inter_check = run_and_store_results(partial_annotation_agreement, (AN_ID_inter, SN_ID_inter), output_names)
     V_S_inter_check = run_and_store_results(partial_annotation_agreement, (VP_ID_inter, SN_ID_inter), output_names)
@@ -349,14 +401,18 @@ def data_process(file):
         "A_rate": snp_annotation_rate(AN_ID_genic),
         "V_rate": snp_annotation_rate(VP_ID_genic)
     }
+    
+    # total empty arrays
+    empty_inter = looking_for_total_missing(AN_ID_inter, SN_ID_inter, VP_ID_inter)
+    empty_genic = looking_for_total_missing(AN_ID_genic, SN_ID_genic, VP_ID_genic)
 
     #Total Annotaiton aggrement 
     tool_agreement_intergenic = complete_annotation_agreement(united_unique_inter, AN_ID_inter, SN_ID_inter, VP_ID_inter)
     tool_agreement_genetic = complete_annotation_agreement(united_unique_genic, AN_ID_genic, SN_ID_genic, VP_ID_genic)
     
     # Summary returns
-    inter_summary = data_summary(tool_agreement_intergenic, rates_inter , A_S_inter_check, V_S_inter_check, V_A_inter_check, chrs[1], size_inter)
-    genic_summary = data_summary(tool_agreement_genetic, rates_genic, A_S_genic_check, V_S_genic_check, V_A_genic_check, chrs[1], size_genic)
+    inter_summary = data_summary(tool_agreement_intergenic, rates_inter , A_S_inter_check, V_S_inter_check, V_A_inter_check, chrs[1], size_inter,empty_inter)
+    genic_summary = data_summary(tool_agreement_genetic, rates_genic, A_S_genic_check, V_S_genic_check, V_A_genic_check, chrs[1], size_genic,empty_genic)
     
     return inter_summary, genic_summary
 
@@ -414,8 +470,8 @@ def main():
     #df_genic_sorted.to_csv('/Users/queme/OneDrive - University of Southern California/Research/Huaiyu Mi/AnnoQ/genic_results_new.csv', index=False)
 
     # HPC 
-    df_inter_sorted.to_csv("/home1/queme/AnnoQ/hrc_12_2019_subsets_counts/inter_results_new.csv", index=False)
-    df_genic_sorted.to_csv("/home1/queme/AnnoQ/hrc_12_2019_subsets_counts/genic_results_new.csv", index=False)
+    df_inter_sorted.to_csv("/home1/queme/AnnoQ/hrc_12_2019_subsets_counts/inter_results_new_updated.csv", index=False)
+    df_genic_sorted.to_csv("/home1/queme/AnnoQ/hrc_12_2019_subsets_counts/genic_results_new_updated.csv", index=False)
 
 
 

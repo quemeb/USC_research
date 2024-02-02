@@ -13,4 +13,4 @@ module load python/3.9.12
 
 python -m pip install pandas numpy --user
 
-python whole_genome_inclusive_exclusive_hpc.py
+python whole_genome_inclusive_exclusive_hpc_updated.py
