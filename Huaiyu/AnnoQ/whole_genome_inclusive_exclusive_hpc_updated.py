@@ -140,6 +140,7 @@ def partial_annotation_agreement(test, master):
     shouldnt_have_any = 0
     empty_test_count = 0
     empty_master_count = 0
+    empty_both = 0
 
     for test_set, master_set in zip(test, master):
         test_set = set(test_set)
@@ -147,10 +148,11 @@ def partial_annotation_agreement(test, master):
         
         if len(test_set) == 0:
             empty_test_count += 1
-            continue  # Skip to the next pair if test is empty
         if len(master_set) == 0:
             empty_master_count += 1
-            continue  # Skip to the next pair if master is empty
+        if len(test_set) == 0 and len(master_set) == 0:
+            empty_both += 1
+            continue  # Skip to the next pair if any is empty
 
 
         # Only compare test with master if both are not empty
@@ -177,8 +179,7 @@ def partial_annotation_agreement(test, master):
     # Return the counts for each type of relationship and empty counts
     return (proper_subset_count, improper_subset_count, disjoint_count, 
             proper_superset_count, partial_overlap_count, shouldnt_have_any, 
-            empty_test_count, empty_master_count)
-
+            empty_test_count, empty_master_count, empty_both)
 
 
 def snp_annotation_rate(test):
@@ -277,6 +278,7 @@ def data_summary(tool_agreement, rates, A_S ,V_S, V_A, chrs, sizes, empty):
                 "A_S_shouldnt": A_S['shouldnt'],
                 "A_S_left_empty": A_S['empty_left'],
                 "A_S_right_empty": A_S['empty_right'],
+                "A_S_both_empty": A_S['empty_both'],
                 # Partial aggrement VEP vs SnpEff
                 "V_S_proper": V_S['proper'],
                 "V_S_improper": V_S['improper'],
@@ -286,6 +288,7 @@ def data_summary(tool_agreement, rates, A_S ,V_S, V_A, chrs, sizes, empty):
                 "V_S_shouldnt": V_S['shouldnt'],
                 "V_S_left_empty": V_S['empty_left'],
                 "V_S_right_empty": V_S['empty_right'],
+                "V_S_both_empty": V_S['empty_both'],
                 # Partial Aggrement VEP vs Annovar
                 "V_A_proper": V_A['proper'],
                 "V_A_improper": V_A['improper'],
@@ -295,6 +298,7 @@ def data_summary(tool_agreement, rates, A_S ,V_S, V_A, chrs, sizes, empty):
                 "V_A_shouldnt": V_A['shouldnt'],
                 "V_A_left_empty": V_A['empty_left'],
                 "V_A_right_empty": V_A['empty_right'],
+                "V_A_both_empty": V_A['empty_both']
                 }
     return dictionary 
 
@@ -379,7 +383,7 @@ def data_process(file):
     # Names of the variables you want to create
     output_names = ['proper', 'improper', 'disjoint', 
                     'superset', 'partial', 'shouldnt',
-                    'empty_left', 'empty_right']
+                    'empty_left', 'empty_right', 'empty_both']
 
     A_S_inter_check = run_and_store_results(partial_annotation_agreement, (AN_ID_inter, SN_ID_inter), output_names)
     V_S_inter_check = run_and_store_results(partial_annotation_agreement, (VP_ID_inter, SN_ID_inter), output_names)
