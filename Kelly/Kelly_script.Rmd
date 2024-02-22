@@ -149,7 +149,7 @@ sink()
 q = init_query_js_body()
 ex = exists_filter("ANNOVAR_ensembl_Effect")
 q = add_query_filter(q, ex)
-variants = perform_search(q)
+variants = perform_search_with_count(q)
 variants
 ```
 

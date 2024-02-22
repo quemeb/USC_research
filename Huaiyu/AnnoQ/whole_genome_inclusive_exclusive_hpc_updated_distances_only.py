@@ -321,23 +321,23 @@ def data_process(file):
     # Selecting data
     AN_ID_genic = cdata["ANNOVAR_ensembl_Gene_ID"]  #Gene ID should be here
     AN_ID_intergenic = cdata["ANNOVAR_ensembl_Closest_gene(intergenic_only)"]    #alternative place for Gene ID
-    AN_ID_tog = [AN_ID_intergenic[i] if gene_id.startswith('.') else gene_id for i, gene_id in enumerate(AN_ID_genic)]
+    #AN_ID_tog = [AN_ID_intergenic[i] if gene_id.startswith('.') else gene_id for i, gene_id in enumerate(AN_ID_genic)]
 
-    SN_ID_tog = cdata["SnpEff_ensembl_Gene_ID"]   #Gene ID for SnpEff
-    SN_ID_intergenic = [SN_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if gene_id.startswith('.')]
-    SN_ID_genic = [SN_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if not gene_id.startswith('.')]
+    #SN_ID_tog = cdata["SnpEff_ensembl_Gene_ID"]   #Gene ID for SnpEff
+    #SN_ID_intergenic = [SN_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if gene_id.startswith('.')]
+    #SN_ID_genic = [SN_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if not gene_id.startswith('.')]
 
     
-    VP_ID_tog = cdata["VEP_ensembl_Gene_ID"]      #Gene ID for VEP
-    VP_ID_intergenic = [VP_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if gene_id.startswith('.')]
-    VP_ID_genic = [VP_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if not gene_id.startswith('.')]
+    #VP_ID_tog = cdata["VEP_ensembl_Gene_ID"]      #Gene ID for VEP
+    #VP_ID_intergenic = [VP_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if gene_id.startswith('.')]
+    #VP_ID_genic = [VP_ID_tog[i] for i, gene_id in enumerate(AN_ID_genic) if not gene_id.startswith('.')]
     
     #Fixing lists after using them as reference
-    AN_ID_genic = [gene_id for gene_id in AN_ID_genic if not gene_id.startswith('.')]
-    AN_ID_intergenic = [gene_id for gene_id in AN_ID_intergenic if not gene_id.startswith('.')]
+    #AN_ID_genic = [gene_id for gene_id in AN_ID_genic if not gene_id.startswith('.')]
+    #AN_ID_intergenic = [gene_id for gene_id in AN_ID_intergenic if not gene_id.startswith('.')]
     
     # # Extracting info from file
-    chrs = cdata["chr"] # chromosome number
+    #chrs = cdata["chr"] # chromosome number
     # pos = cdata["pos"] # SNP position
     # ref = cdata["ref"] # reference
     # alt = cdata["alt"] # mutation
@@ -350,85 +350,85 @@ def data_process(file):
 
 
     """ Extracting Gene IDs"""
-    AN_ID_inter = no_repeats(extract(AN_ID_intergenic))
-    AN_ID_genic = no_repeats(extract(AN_ID_genic))
+    #AN_ID_inter = no_repeats(extract(AN_ID_intergenic))
+    #AN_ID_genic = no_repeats(extract(AN_ID_genic))
     
     # Extracting Gene ID in SnpEff
-    SN_ID_inter = no_repeats(extract(SN_ID_intergenic))
-    SN_ID_genic = no_repeats(extract(SN_ID_genic))
+    #SN_ID_inter = no_repeats(extract(SN_ID_intergenic))
+    #SN_ID_genic = no_repeats(extract(SN_ID_genic))
     
     # Extracting Gene ID in VEP
-    VP_ID_inter = no_repeats(extract(VP_ID_intergenic))
-    VP_ID_genic = no_repeats(extract(VP_ID_genic))
+    #VP_ID_inter = no_repeats(extract(VP_ID_intergenic))
+    #VP_ID_genic = no_repeats(extract(VP_ID_genic))
     
-    size_inter = len(AN_ID_inter)
-    size_genic = len(AN_ID_genic)
+    #size_inter = len(AN_ID_inter)
+    #size_genic = len(AN_ID_genic)
     
     
     """ ---------------  Comparing tools to 'master' annotiation  ------------------"""
     
     # Merging all Gene IDs
-    united_inter = [np.concatenate((AN_ID_inter[i], SN_ID_inter[i], VP_ID_inter[i]), axis=None) for i in range(size_inter)]
-    united_genic = [np.concatenate((AN_ID_genic[i], SN_ID_genic[i], VP_ID_genic[i]), axis=None) for i in range(size_genic)]
+    #united_inter = [np.concatenate((AN_ID_inter[i], SN_ID_inter[i], VP_ID_inter[i]), axis=None) for i in range(size_inter)]
+    #united_genic = [np.concatenate((AN_ID_genic[i], SN_ID_genic[i], VP_ID_genic[i]), axis=None) for i in range(size_genic)]
     
     # Getting rid of repeats for each SNP
-    united_unique_inter = no_repeats(united_inter)
-    united_unique_genic = no_repeats(united_genic)
+    #united_unique_inter = no_repeats(united_inter)
+    #united_unique_genic = no_repeats(united_genic)
     
     # Converting lists to arrays
-    AN_ID_inter = np.array(AN_ID_inter, dtype=object)
-    SN_ID_inter = np.array(SN_ID_inter, dtype=object)
-    VP_ID_inter = np.array(VP_ID_inter, dtype=object)
+    #AN_ID_inter = np.array(AN_ID_inter, dtype=object)
+    #SN_ID_inter = np.array(SN_ID_inter, dtype=object)
+    #VP_ID_inter = np.array(VP_ID_inter, dtype=object)
     
-    AN_ID_genic = np.array(AN_ID_genic, dtype=object)
-    SN_ID_genic = np.array(SN_ID_genic, dtype=object)
-    VP_ID_genic = np.array(VP_ID_genic, dtype=object)
+    #AN_ID_genic = np.array(AN_ID_genic, dtype=object)
+    #SN_ID_genic = np.array(SN_ID_genic, dtype=object)
+    #VP_ID_genic = np.array(VP_ID_genic, dtype=object)
     
-    united_inter = np.array(united_inter, dtype=object)
-    united_genic = np.array(united_genic, dtype=object)
+    #united_inter = np.array(united_inter, dtype=object)
+    #united_genic = np.array(united_genic, dtype=object)
     
 
     # Names of the variables you want to create
-    output_names = ['proper', 'improper', 'disjoint', 
-                    'superset', 'partial', 'shouldnt',
-                    'empty_left', 'empty_right', 'empty_both']
+    #output_names = ['proper', 'improper', 'disjoint', 
+    #                'superset', 'partial', 'shouldnt',
+    #                'empty_left', 'empty_right', 'empty_both']
 
-    A_S_inter_check = run_and_store_results(partial_annotation_agreement, (AN_ID_inter, SN_ID_inter), output_names)
-    V_S_inter_check = run_and_store_results(partial_annotation_agreement, (VP_ID_inter, SN_ID_inter), output_names)
-    V_A_inter_check = run_and_store_results(partial_annotation_agreement, (VP_ID_inter, AN_ID_inter), output_names)
+    #A_S_inter_check = run_and_store_results(partial_annotation_agreement, (AN_ID_inter, SN_ID_inter), output_names)
+    #V_S_inter_check = run_and_store_results(partial_annotation_agreement, (VP_ID_inter, SN_ID_inter), output_names)
+    #V_A_inter_check = run_and_store_results(partial_annotation_agreement, (VP_ID_inter, AN_ID_inter), output_names)
     
-    A_S_genic_check = run_and_store_results(partial_annotation_agreement, (AN_ID_genic, SN_ID_genic), output_names)
-    V_S_genic_check = run_and_store_results(partial_annotation_agreement, (VP_ID_genic, SN_ID_genic), output_names)
-    V_A_genic_check = run_and_store_results(partial_annotation_agreement, (VP_ID_genic, AN_ID_genic), output_names)
+    #A_S_genic_check = run_and_store_results(partial_annotation_agreement, (AN_ID_genic, SN_ID_genic), output_names)
+    #V_S_genic_check = run_and_store_results(partial_annotation_agreement, (VP_ID_genic, SN_ID_genic), output_names)
+    #V_A_genic_check = run_and_store_results(partial_annotation_agreement, (VP_ID_genic, AN_ID_genic), output_names)
 
     
     # Calculating rates and storing them in a dictionary
-    rates_inter = {
-        "S_rate": snp_annotation_rate(SN_ID_inter),
-        "A_rate": snp_annotation_rate(AN_ID_inter),
-        "V_rate": snp_annotation_rate(VP_ID_inter)
-    }
-    rates_genic = {
-        "S_rate": snp_annotation_rate(SN_ID_genic),
-        "A_rate": snp_annotation_rate(AN_ID_genic),
-        "V_rate": snp_annotation_rate(VP_ID_genic)
-    }
+    # #rates_inter = {
+    #     "S_rate": snp_annotation_rate(SN_ID_inter),
+    #     "A_rate": snp_annotation_rate(AN_ID_inter),
+    #     "V_rate": snp_annotation_rate(VP_ID_inter)
+    # }
+    # rates_genic = {
+    #     "S_rate": snp_annotation_rate(SN_ID_genic),
+    #     "A_rate": snp_annotation_rate(AN_ID_genic),
+    #     "V_rate": snp_annotation_rate(VP_ID_genic)
+    # }
     
-    # total empty arrays
-    empty_inter = looking_for_total_missing(AN_ID_inter, SN_ID_inter, VP_ID_inter)
-    empty_genic = looking_for_total_missing(AN_ID_genic, SN_ID_genic, VP_ID_genic)
+    # # total empty arrays
+    # empty_inter = looking_for_total_missing(AN_ID_inter, SN_ID_inter, VP_ID_inter)
+    # empty_genic = looking_for_total_missing(AN_ID_genic, SN_ID_genic, VP_ID_genic)
 
-    #Total Annotaiton aggrement 
-    tool_agreement_intergenic = complete_annotation_agreement(united_unique_inter, AN_ID_inter, SN_ID_inter, VP_ID_inter)
-    tool_agreement_genetic = complete_annotation_agreement(united_unique_genic, AN_ID_genic, SN_ID_genic, VP_ID_genic)
+    # #Total Annotaiton aggrement 
+    # tool_agreement_intergenic = complete_annotation_agreement(united_unique_inter, AN_ID_inter, SN_ID_inter, VP_ID_inter)
+    # tool_agreement_genetic = complete_annotation_agreement(united_unique_genic, AN_ID_genic, SN_ID_genic, VP_ID_genic)
     
-    # Summary returns
-    inter_summary = data_summary(tool_agreement_intergenic, rates_inter , A_S_inter_check, V_S_inter_check, V_A_inter_check, chrs[1], size_inter,empty_inter)
-    genic_summary = data_summary(tool_agreement_genetic, rates_genic, A_S_genic_check, V_S_genic_check, V_A_genic_check, chrs[1], size_genic,empty_genic)
+    # # Summary returns
+    # inter_summary = data_summary(tool_agreement_intergenic, rates_inter , A_S_inter_check, V_S_inter_check, V_A_inter_check, chrs[1], size_inter,empty_inter)
+    # genic_summary = data_summary(tool_agreement_genetic, rates_genic, A_S_genic_check, V_S_genic_check, V_A_genic_check, chrs[1], size_genic,empty_genic)
     
     inter_distance = extract_dist(AN_ID_intergenic)
     
-    return inter_summary, genic_summary, inter_distance
+    return inter_distance
 
 
 def process_all_files():
@@ -443,17 +443,17 @@ def process_all_files():
     
     
     # Step 1: Create empty dictionaries for accumulation
-    all_data1 = {}
-    all_data2 = {}
+    #all_data1 = {}
+    #all_data2 = {}
     
     for filename in glob.glob(path):
         #print(f"Processing file: {filename}")  # Print the current filename
-        inter, genic, inter_distance = data_process(filename)
+        inter_distance = data_process(filename)
         
         # Assuming the chromosome is the key and the data_summary dictionary is the value
         # Update the accumulated dictionaries with new data
-        all_data1[inter['Chr']] = inter
-        all_data2[genic['Chr']] = genic
+        # all_data1[inter['Chr']] = inter
+        # all_data2[genic['Chr']] = genic
         
         # Write inter_distance to a text file, one for each processed file
         distance_filename = f"{filename}_inter_distance.txt"  # Naming the file based on the original filename
@@ -462,24 +462,24 @@ def process_all_files():
                 f.write(f"{distance}\n")
         
         
-    # Step 3: Convert dictionaries to pandas DataFrame
-    df_inter = pd.DataFrame(all_data1).T  # Transpose because keys are chromosomes and values are another dictionary
-    df_genic = pd.DataFrame(all_data2).T  # Same reason for Transpose
+    # # Step 3: Convert dictionaries to pandas DataFrame
+    # df_inter = pd.DataFrame(all_data1).T  # Transpose because keys are chromosomes and values are another dictionary
+    # df_genic = pd.DataFrame(all_data2).T  # Same reason for Transpose
     
-    # Assuming the chromosome numbers are stored in a column named 'Chr', sort by this column
-    df_inter_sorted = df_inter.sort_values(by='Chr')
-    df_genic_sorted = df_genic.sort_values(by='Chr')
+    # # Assuming the chromosome numbers are stored in a column named 'Chr', sort by this column
+    # df_inter_sorted = df_inter.sort_values(by='Chr')
+    # df_genic_sorted = df_genic.sort_values(by='Chr')
     
-    return df_inter_sorted, df_genic_sorted
+    # return df_inter_sorted, df_genic_sorted
     
 
 
 def main():
     # Start the timer
-    start_time = time.time()
+    # start_time = time.time()
 
     # Process all files and get the sorted dataframes
-    df_inter_sorted, df_genic_sorted = process_all_files()
+    process_all_files()
     
     # Save them to CSV
     # windows platform
@@ -491,16 +491,16 @@ def main():
     #df_genic_sorted.to_csv('/Users/queme/OneDrive - University of Southern California/Research/Huaiyu Mi/AnnoQ/genic_results_new.csv', index=False)
 
     # HPC 
-    df_inter_sorted.to_csv("/home1/queme/AnnoQ/hrc_12_2019_subsets_counts/inter_results_new_updated.csv", index=False)
-    df_genic_sorted.to_csv("/home1/queme/AnnoQ/hrc_12_2019_subsets_counts/genic_results_new_updated.csv", index=False)
+    # df_inter_sorted.to_csv("/home1/queme/AnnoQ/hrc_12_2019_subsets_counts/inter_results_new_updated.csv", index=False)
+    # df_genic_sorted.to_csv("/home1/queme/AnnoQ/hrc_12_2019_subsets_counts/genic_results_new_updated.csv", index=False)
 
 
 
-    # End the timer and calculate elapsed time
-    elapsed_time = time.time() - start_time
+    # # End the timer and calculate elapsed time
+    # elapsed_time = time.time() - start_time
 
     #print("Files saved successfully!")
-    print(f"Total time elapsed: {elapsed_time:.2f} seconds")
+    # print(f"Total time elapsed: {elapsed_time:.2f} seconds")
 
 # This block ensures that the main function is called only when the script is run directly, 
 # and not if it's imported as a module in another script.
