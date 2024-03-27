@@ -227,11 +227,11 @@ rmanova_rate <- function(df){
 
 
 ```{r}
-genic_file <- "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Huaiyu Mi\\AnnoQ\\genic_results.csv"
+genic_file <- "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Huaiyu Mi\\AnnoQ\\Raw Data Comparisons\\genic_results.csv"
 #genic_file <- "genic_results.csv"
 genic <- read.csv(genic_file)
 
-inter_file <- "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Huaiyu Mi\\AnnoQ\\inter_results.csv"
+inter_file <- "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Huaiyu Mi\\AnnoQ\\Raw Data Comparisons\\inter_results.csv"
 #inter_file <- "inter_results.csv"
 inter <- read.csv(inter_file)
 
