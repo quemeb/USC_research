@@ -1,0 +1,174 @@
+---
+title: "AnnoQR2.0"
+author: "Bryan Queme"
+date: "`r Sys.Date()`"
+output: github_document
+---
+
+```{r library}
+# Try to load AnnoQR
+if (!requireNamespace("AnnoQR", quietly = TRUE)) {
+  # Check for devtools and install it if necessary
+  if (!requireNamespace("devtools", quietly = TRUE)) {
+    install.packages("devtools")
+  }
+  # Load devtools
+  library(devtools)
+  # Install AnnoQR from GitHub
+  install_github("USCbiostats/AnnoQR")
+}
+
+# Load AnnoQR
+library(AnnoQR)
+
+```
+
+```{r}
+# Only using the basic annotation types
+basic_annotations = c("chr", "pos", "ref", "alt",
+                      "ANNOVAR_ensembl_Effect",
+                      "ANNOVAR_ensembl_Closest_gene(intergenic_only)",
+                      "ANNOVAR_ensembl_summary",
+                      "SnpEff_ensembl_Effect",
+                      "SnpEff_ensembl_Gene_ID",
+                      "SnpEff_ensembl_summary",
+                      "VEP_ensembl_Consequence",
+                      "VEP_ensembl_summary",
+                      "rs_dbSNP151")
+```
+
+
+```{r, region extraction function}
+
+# Number of hits
+hits = function(variants){
+  # Finding number of hits
+  len = variants$hits$total$value
+  
+  # Early return if no annotations
+  if (len == 0) {
+    return(data.frame())
+  }
+  
+  # Creating an empty data frame
+  n = length(basic_annotations)
+  df = data.frame(matrix(ncol=n, nrow=len))
+  
+  colnames(df) = basic_annotations
+  
+  # Filling the data frame with annotation info
+  for(i in 1:len){
+    for(j in 1:n){
+      
+      annotation_field <- paste0('_source.', basic_annotations[j])
+    
+      # Checking for annotations not to be empty
+      if(length(variants$hits$hits[[annotation_field]][i]) == 0){
+        df[i,j] = " "
+      }else{
+        df[i,j] = variants$hits$hits[[annotation_field]][i]
+      }
+    }
+  }
+  return(df)
+  
+}
+
+```
+
+```{r, data intake}
+#url <- choose.files()
+#url <- "https://raw.githubusercontent.com/quemeb/USC_research/main/Kelly/ex_peaks_example.csv"
+url <- "C:\\Users\\bryan\\OneDrive - University of Southern California\\Research\\Huaiyu Mi\\AnnoQ\\Kelly's\\ex_peaks.csv"
+cdata <- read.csv(url)
+
+```
+
+```{r, multiple regions}
+
+# Function to retrieve hits for each region
+get_hits_for_region <- function(chr, start, end) {
+  variants = regionQuery(contig = chr, start = start, end = end)
+  hits(variants)
+}
+
+# Function to fetch all hits
+get_all_hits <- function(cdata, basic_annotations) {
+  len_regions <- nrow(cdata)
+  
+  # List to store individual data frames
+  list_df <- vector("list", len_regions)
+  
+  # Loop through each region
+  for(i in seq_len(len_regions)) {
+    list_df[[i]] <- get_hits_for_region(cdata$chr[i], cdata$start[i], cdata$end[i])
+  }
+  
+  # Combine all data frames into one
+  df_all <- do.call(rbind, list_df)
+  
+  # Add column names
+  colnames(df_all) <- basic_annotations
+  
+  return(df_all)
+}
+
+#df_all <- get_all_hits(cdata, basic_annotations)
+
+
+```
+
+# Parallel
+```{r, multiple regions in parallel}
+if (!requireNamespace("foreach", quietly = TRUE)) install.packages("foreach")
+if (!requireNamespace("doParallel", quietly = TRUE)) install.packages("doParallel")
+
+library(foreach)
+library(doParallel)
+
+# Parallel version of Function to fetch all hits
+get_all_hits_parallel <- function(cdata, basic_annotations) {
+  len_regions <- nrow(cdata)
+  
+  no_cores <- detectCores() - 2 # Reserve 2 cores for system processes
+  registerDoParallel(cores=no_cores)
+  
+  # Use foreach for parallel processing
+  #list_df <- foreach(i = seq_len(len_regions), .packages = c("AnnoQR"), .combine='rbind') %dopar% {
+  list_df <- foreach(i = seq_len(len_regions), .packages = c("AnnoQR"), .export = c("get_hits_for_region", "hits", "basic_annotations")) %dopar% {
+    get_hits_for_region(cdata$chr[i], cdata$start[i], cdata$end[i])
+  }
+  
+  #df_all <- list_df
+  
+  # Combine all data frames into one
+  df_all <- do.call(rbind, list_df)
+  
+  # Add column names
+  colnames(df_all) <- basic_annotations
+  
+  # Stop the parallel backend
+  stopImplicitCluster()
+  
+  return(df_all)
+}
+start_time <- Sys.time()
+df_all <- get_all_hits(cdata, basic_annotations)
+end_time <- Sys.time()
+print(paste("Single thread",end_time - start_time))
+
+start_time <- Sys.time()
+df_all <- get_all_hits_parallel(cdata, basic_annotations)
+end_time <- Sys.time()
+print(paste("Parallel",end_time - start_time))
+```
+
+
+```{r, output table}
+
+write.table(df_all, "ex_peaks.txt", sep = "\t", row.names = FALSE, quote = FALSE)
+
+```
+
+
+
