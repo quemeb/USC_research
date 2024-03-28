@@ -27,8 +27,14 @@ library(AnnoQR)
 # Only using the basic annotation types
 basic_annotations = c("chr", "pos", "ref", "alt",
                       "ANNOVAR_ensembl_Effect",
+                      "ANNOVAR_ensembl_Closest_gene(intergenic_only)",
+                      "ANNOVAR_ensembl_summary",
                       "SnpEff_ensembl_Effect",
-                      "SnpEff_ensembl_Effect_impact")
+                      "SnpEff_ensembl_Gene_ID",
+                      "SnpEff_ensembl_summary",
+                      "VEP_ensembl_Consequence",
+                      "VEP_ensembl_summary",
+                      "rs_dbSNP151")
 ```
 
 
@@ -39,73 +45,93 @@ hits = function(variants){
   # Finding number of hits
   len = variants$hits$total$value
   
-  if(len != 0){
-    
-    # Creating an empty data frame
-    n = length(basic_annotations)
-    df = data.frame(matrix(ncol=n, nrow=len))
-    
-    colnames(df) = basic_annotations
-    
-    # Filling the data frame with annotation info
-    for(i in 1:len){
-      for(j in 1:n){
-        
-        annotation_field <- paste0('_source.', basic_annotations[j])
-      
-        # Checking for annotations not to be empty
-        if(length(variants$hits$hits[[annotation_field]][i]) == 0){
-          df[i,j] = " "
-        }else{
-          df[i,j] = variants$hits$hits[[annotation_field]][i]
-        }
-      }
-    }
-    
-    return(df)
+  # Early return if no annotations
+  if (len == 0) {
+    return(data.frame())
   }
   
-  #else return nothing
+  # Creating an empty data frame
+  n = length(basic_annotations)
+  df = data.frame(matrix(ncol=n, nrow=len))
+  
+  colnames(df) = basic_annotations
+  
+  # Filling the data frame with annotation info
+  for(i in 1:len){
+    for(j in 1:n){
+      
+      annotation_field <- paste0('_source.', basic_annotations[j])
+    
+      # Checking for annotations not to be empty
+      if(length(variants$hits$hits[[annotation_field]][i]) == 0){
+        df[i,j] = " "
+      }else{
+        df[i,j] = variants$hits$hits[[annotation_field]][i]
+      }
+    }
+  }
+  return(df)
+  
 }
 
 ```
 
 ```{r, data intake}
-#url <- choose.files()
-url <- "https://raw.githubusercontent.com/quemeb/USC_research/main/Kelly/ex_peaks_example.csv"
+url <- choose.files()
+#url <- "https://raw.githubusercontent.com/quemeb/USC_research/main/Kelly/ex_peaks_example.csv"
 cdata <- read.csv(url)
 
 ```
 
 ```{r, multiple regions}
 
-# Length of region file
-len_regions = length(cdata$chr)
-
-# Creating an empty data frame
-n = length(basic_annotations)
-df_all = data.frame(matrix(ncol=n, nrow=0))
-names(df_all) <- basic_annotations
-
-for(i in 1:len_regions){
-  variants = regionQuery(contig = cdata$chr[i], start = cdata$start[i], end=cdata$end[i])
-  x <- hits(variants)
-  df_all <- rbind(df_all, x)
+# Function to retrieve hits for each region
+get_hits_for_region <- function(chr, start, end) {
+  variants = regionQuery(contig = chr, start = start, end = end)
+  hits(variants)
 }
+
+# Function to fetch all hits
+get_all_hits <- function(cdata, basic_annotations) {
+  len_regions <- nrow(cdata)
+  
+  # List to store individual data frames
+  list_df <- vector("list", len_regions)
+  
+  # Loop through each region
+  for(i in seq_len(len_regions)) {
+    print(paste("working on", i))
+    list_df[[i]] <- get_hits_for_region(cdata$chr[i], cdata$start[i], cdata$end[i])
+  }
+  
+  # Combine all data frames into one
+  df_all <- do.call(rbind, list_df)
+  
+  # Add column names
+  colnames(df_all) <- basic_annotations
+  
+  return(df_all)
+}
+
+start_time <- Sys.time()
+df_all <- get_all_hits(cdata, basic_annotations)
+end_time <- Sys.time()
+print(end_time - start_time)
 
 ```
 
 ```{r, output table}
 
-write.table(df_all, "ex_peaks.txt", sep = "\t", row.names = FALSE, quote = FALSE)
+write.table(df_all, "peaks.txt", sep = "\t", row.names = FALSE, quote = FALSE)
 
 ```
 
 
 ```{r}
-x <- regionQuery(contig = '20', start=26188698, end=26190631)
-total_count <- x$hits$total$value
+#x <- regionQuery(contig = '20', start=26188698, end=26190631)
+#total_count <- x$hits$total$value
 ```
+
 
 
 
