@@ -1,47 +1,65 @@
-if (!require("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-
-if (!require("biomaRt", quietly = TRUE))
-  BiocManager::install("biomaRt")
-
-library(biomaRt)
-library(stringr)
-library(dplyr)
-
-# Set up Ensembl
-ensembl = useEnsembl(biomart="snps", dataset = "hsapiens_snp", version = "GRCh37")
-
-# Function to get information from Ensembl
-rs_ID_get <- function(snp_positions){
-  getBM(attributes = c("refsnp_id", "allele", "chr_name", "chrom_start", 
-                       "allele_1", "minor_allele", "minor_allele_freq", 
-                       "clinical_significance"),
-        filters = "chromosomal_region",
-        values = snp_positions,
-        mart = ensembl)
+# Ensure necessary packages are installed
+if (!requireNamespace("httr", quietly = TRUE)) {
+  install.packages("httr")
 }
 
-# Load file
-#file_path <- "/cloud/project/SNPs_Seq37_example.csv"
-df <- read.csv(file_path)
+if (!requireNamespace("jsonlite", quietly = TRUE)) {
+  install.packages("jsonlite")
+}
 
-# Prepare data
-snp_pos <- apply(df, 1, paste, collapse = ":")
-rs_ID <- rs_ID_get(snp_pos)
+# Load required libraries
+library(httr)
+library(jsonlite)
 
-# Filter data directly (replaces the loop)
-rs_ID_clean <- rs_ID %>% 
-  filter(str_starts(refsnp_id, "rs"), !is.na(minor_allele_freq))
-
-# Check for missing chrom_start
-missing_start <- setdiff(df$chr_start, rs_ID_clean$chrom_start)
-
-# If any are missing, add them to rs_ID_clean
-if (length(missing_start) > 0) {
-  missing_data <- rs_ID %>% 
-    filter(chrom_start %in% missing_start, str_starts(allele, "[:upper:]/[:upper:]"), str_starts(refsnp_id, "rs"))
+# Function to retrieve SNP information from Ensembl API for the specified genome version
+rs_ID_get <- function(snp_positions, genome_version) {
+  base_url <- ifelse(genome_version == "37", 
+                     "https://grch37.rest.ensembl.org", 
+                     "https://rest.ensembl.org") # Static URL for GRCh38
+  endpoint <- "/overlap/region/human/"
   
-  rs_ID_clean <- rbind(rs_ID_clean, missing_data)
+  results <- lapply(snp_positions, function(pos) {
+    url <- paste0(base_url, endpoint, pos, "?feature=variation")
+    response <- GET(url, accept("application/json"))
+    stop_for_status(response)
+    content(response, as = "parsed", type = "application/json")
+  })
+  
+  # Combine results into a single data frame and ensure unique entries
+  results <- do.call(rbind, lapply(results, function(x) {
+    if (length(x) > 0) {
+      data.frame(do.call(rbind, x), stringsAsFactors = FALSE)
+    } else {
+      NULL
+    }
+  }))
+  
+  return(results)
 }
 
-# The rs_ID_clean should now be ready for use.
+# Function to match rsID back to df
+match_rsID_to_df <- function(df, rs_ID) {
+  df$rsID <- NA # Initialize the new rsID column
+  
+  # Loop through each row in df
+  for (i in 1:nrow(df)) {
+    start_pos <- df$start[i]
+    
+    # Loop through each row in rs_ID
+    for (j in 1:nrow(rs_ID)) {
+      row_values <- unlist(rs_ID[j, ])
+      
+      # Check if start_pos appears twice in the row
+      if (sum(row_values == start_pos) == 2) {
+        # Look for the cell that starts with "rs"
+        rsid <- row_values[grep("^rs[0-9]{7}", row_values)]
+        
+        if (length(rsid) > 0) {
+          df$rsID[i] <- rsid[1]
+        }
+      }
+    }
+  }
+  
+  return(df)
+}
